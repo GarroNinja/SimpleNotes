@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { CssBaseline, Container, Box, Tabs, Tab, Grid } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Header from "./Header";
-import Footer from "./Footer";
-import Note from "./Note";
-import CreateArea from "./CreateArea";
+import Header from "./Layout/Header";
+import Footer from "./Layout/Footer";
+import Note from "./Notes/Note";
+import CreateArea from "./Notes/CreateArea";
 
 function App() {
   const [notes, setNotes] = useState([]);
@@ -81,6 +81,22 @@ function App() {
     });
   }
 
+  function handleLabelChange(id, updatedLabels) {
+    setNotes(prevNotes => {
+      const updatedNotes = [...prevNotes];
+      updatedNotes[id] = { ...updatedNotes[id], labels: updatedLabels };
+      return updatedNotes;
+    });
+  }
+
+  function handleArchivedLabelChange(id, updatedLabels) {
+    setArchivedNotes(prevNotes => {
+      const updatedNotes = [...prevNotes];
+      updatedNotes[id] = { ...updatedNotes[id], labels: updatedLabels };
+      return updatedNotes;
+    });
+  }
+
   function handleSearch(text) {
     setSearchText(text);
   }
@@ -149,6 +165,7 @@ function App() {
                       onDelete={deleteNote}
                       onPin={handlePin}
                       onArchive={handleArchive}
+                      onLabelChange={handleLabelChange}
                     />
                   </Grid>
                 ))}
@@ -167,6 +184,7 @@ function App() {
                     color={noteItem.color}
                     onDelete={deleteArchivedNote}
                     onArchive={() => handleUnarchive(index)}
+                    onLabelChange={handleArchivedLabelChange}
                   />
                 </Grid>
               ))}
