@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { CssBaseline, Container, Box, Tabs, Tab, Grid } from "@mui/material";
+import { 
+  CssBaseline, 
+  Container, 
+  Box, 
+  Tabs, 
+  Tab, 
+  Grid,
+  IconButton,
+  useMediaQuery
+} from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Header from "./Layout/Header";
 import Footer from "./Layout/Footer";
 import Note from "./Notes/Note";
@@ -11,6 +22,18 @@ function App() {
   const [archivedNotes, setArchivedNotes] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [activeTab, setActiveTab] = useState(0);
+  
+  // Dark mode state
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem("darkMode");
+    return savedMode !== null ? JSON.parse(savedMode) : prefersDarkMode;
+  });
+
+  // Save dark mode preference to localStorage
+  useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode]);
 
   // Load notes from localStorage on initial render
   useEffect(() => {
@@ -105,6 +128,10 @@ function App() {
     setActiveTab(newValue);
   }
 
+  function toggleDarkMode() {
+    setDarkMode(!darkMode);
+  }
+
   // Filter notes based on search text
   const filteredNotes = notes.filter(
     note => 
@@ -121,11 +148,13 @@ function App() {
   // Create theme
   const theme = createTheme({
     palette: {
+      mode: darkMode ? 'dark' : 'light',
       primary: {
         main: "#f5ba13",
       },
       background: {
-        default: "#f5f5f5",
+        default: darkMode ? '#121212' : '#f5f5f5',
+        paper: darkMode ? '#1e1e1e' : '#ffffff',
       },
     },
     typography: {
@@ -139,21 +168,30 @@ function App() {
       <div>
         <Header onSearch={handleSearch} />
         <Container>
-          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            borderBottom: 1, 
+            borderColor: "divider", 
+            mb: 2 
+          }}>
             <Tabs 
               value={activeTab} 
               onChange={handleTabChange} 
               aria-label="note tabs"
-              centered
             >
               <Tab label="Notes" />
               <Tab label="Archive" />
             </Tabs>
+            <IconButton onClick={toggleDarkMode} color="inherit">
+              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
           </Box>
 
           {activeTab === 0 && (
             <>
-              <CreateArea onAdd={addNote} />
+              <CreateArea onAdd={addNote} darkMode={darkMode} />
               <Grid container spacing={2} justifyContent="center">
                 {filteredNotes.map((noteItem, index) => (
                   <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
@@ -162,10 +200,12 @@ function App() {
                       title={noteItem.title}
                       content={noteItem.content}
                       color={noteItem.color}
+                      labels={noteItem.labels}
                       onDelete={deleteNote}
                       onPin={handlePin}
                       onArchive={handleArchive}
                       onLabelChange={handleLabelChange}
+                      darkMode={darkMode}
                     />
                   </Grid>
                 ))}
@@ -182,9 +222,11 @@ function App() {
                     title={noteItem.title}
                     content={noteItem.content}
                     color={noteItem.color}
+                    labels={noteItem.labels}
                     onDelete={deleteArchivedNote}
                     onArchive={() => handleUnarchive(index)}
                     onLabelChange={handleArchivedLabelChange}
+                    darkMode={darkMode}
                   />
                 </Grid>
               ))}

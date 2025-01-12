@@ -42,6 +42,10 @@ function CreateArea(props) {
     color: "#ffffff",
     labels: []
   });
+  
+  // Adjust colors for dark mode
+  const isDarkMode = props.darkMode;
+  const adjustedColor = isDarkMode && note.color === "#ffffff" ? "#1e1e1e" : note.color;
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -126,7 +130,7 @@ function CreateArea(props) {
             elevation={3} 
             sx={{ 
               p: 2, 
-              backgroundColor: note.color, 
+              backgroundColor: adjustedColor, 
               borderRadius: 2 
             }}
           >

@@ -42,6 +42,12 @@ function Note(props) {
   const [labels, setLabels] = useState(props.labels || []);
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
+  
+  // Adjust colors for dark mode
+  const isDarkMode = props.darkMode;
+  const adjustedColor = isDarkMode && color === "#ffffff" ? "#1e1e1e" : color;
+  const textColor = isDarkMode && color === "#ffffff" ? "text.primary" : 
+                   (color !== "#ffffff" ? "text.primary" : "text.secondary");
 
   function handleDelete() {
     props.onDelete(props.id);
@@ -112,7 +118,7 @@ function Note(props) {
         maxWidth: 345, 
         m: 1, 
         display: "inline-block", 
-        backgroundColor: color,
+        backgroundColor: adjustedColor,
         boxShadow: 1,
         position: "relative",
         "&:hover": {
@@ -132,7 +138,7 @@ function Note(props) {
         <Typography variant="h5" component="div" gutterBottom>
           {props.title}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
+        <Typography variant="body2" color={textColor} sx={{ whiteSpace: "pre-wrap" }}>
           {props.content}
         </Typography>
         
