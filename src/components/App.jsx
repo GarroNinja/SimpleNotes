@@ -166,7 +166,13 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <div>
-        <Header onSearch={handleSearch} />
+        <Header 
+          onSearch={handleSearch} 
+          onChangeTab={handleTabChange}
+          activeTab={activeTab}
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+        />
         <Container>
           <Box sx={{ 
             display: 'flex', 
@@ -174,7 +180,8 @@ function App() {
             alignItems: 'center',
             borderBottom: 1, 
             borderColor: "divider", 
-            mb: 2 
+            mb: 2,
+            display: { xs: 'none', sm: 'flex' } // Hide on mobile as we use drawer instead
           }}>
             <Tabs 
               value={activeTab} 

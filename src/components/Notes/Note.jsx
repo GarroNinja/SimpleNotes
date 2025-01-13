@@ -12,7 +12,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button
+  Button,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -35,6 +37,8 @@ const colors = [
 ];
 
 function Note(props) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isPinned, setIsPinned] = useState(false);
   const [color, setColor] = useState(props.color || "#ffffff");
   const [colorMenuAnchor, setColorMenuAnchor] = useState(null);
@@ -42,6 +46,7 @@ function Note(props) {
   const [labels, setLabels] = useState(props.labels || []);
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   // Adjust colors for dark mode
   const isDarkMode = props.darkMode;
@@ -49,8 +54,17 @@ function Note(props) {
   const textColor = isDarkMode && color === "#ffffff" ? "text.primary" : 
                    (color !== "#ffffff" ? "text.primary" : "text.secondary");
 
-  function handleDelete() {
+  function handleDeleteClick() {
+    setDeleteDialogOpen(true);
+  }
+
+  function handleDeleteConfirm() {
     props.onDelete(props.id);
+    setDeleteDialogOpen(false);
+  }
+
+  function handleDeleteCancel() {
+    setDeleteDialogOpen(false);
   }
 
   function handlePinClick() {
@@ -112,142 +126,170 @@ function Note(props) {
   }
 
   return (
-    <Card 
-      sx={{ 
-        minWidth: 240, 
-        maxWidth: 345, 
-        m: 1, 
-        display: "inline-block", 
-        backgroundColor: adjustedColor,
-        boxShadow: 1,
-        position: "relative",
-        "&:hover": {
-          boxShadow: 3,
-          "& .MuiCardActions-root": {
-            display: "flex"
+    <>
+      <Card 
+        sx={{ 
+          minWidth: 240, 
+          maxWidth: { xs: '100%', sm: 345 }, 
+          m: 1, 
+          display: "inline-block", 
+          backgroundColor: adjustedColor,
+          boxShadow: 1,
+          position: "relative",
+          "&:hover": {
+            boxShadow: 3,
+            "& .MuiCardActions-root": {
+              display: "flex"
+            }
           }
-        }
-      }}
-    >
-      <CardContent>
-        <Box sx={{ position: "absolute", top: 5, right: 5 }}>
-          <IconButton size="small" onClick={handlePinClick}>
-            {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
-          </IconButton>
-        </Box>
-        <Typography variant="h5" component="div" gutterBottom>
-          {props.title}
-        </Typography>
-        <Typography variant="body2" color={textColor} sx={{ whiteSpace: "pre-wrap" }}>
-          {props.content}
-        </Typography>
+        }}
+      >
+        <CardContent>
+          <Box sx={{ position: "absolute", top: 5, right: 5 }}>
+            <IconButton size="small" onClick={handlePinClick}>
+              {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+            </IconButton>
+          </Box>
+          <Typography variant="h5" component="div" gutterBottom>
+            {props.title}
+          </Typography>
+          <Typography variant="body2" color={textColor} sx={{ whiteSpace: "pre-wrap" }}>
+            {props.content}
+          </Typography>
+          
+          {labels.length > 0 && (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 2 }}>
+              {labels.map((label, index) => (
+                <Chip 
+                  key={index} 
+                  label={label} 
+                  size="small" 
+                  onDelete={() => handleRemoveLabel(label)}
+                />
+              ))}
+            </Box>
+          )}
+        </CardContent>
+        <CardActions 
+          sx={{ 
+            display: isMobile ? "flex" : "none", 
+            justifyContent: "flex-start",
+            p: 1,
+            "& .MuiCard-root:hover &": {
+              display: "flex"
+            }
+          }}
+        >
+          <Tooltip title="Delete">
+            <IconButton size="small" onClick={handleDeleteClick} aria-label="delete">
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Change color">
+            <IconButton 
+              size="small" 
+              onClick={handleColorMenuOpen} 
+              aria-label="change color"
+              aria-controls={colorMenuOpen ? "color-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={colorMenuOpen ? "true" : undefined}
+            >
+              <ColorLensOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Add label">
+            <IconButton 
+              size="small" 
+              onClick={handleLabelDialogOpen} 
+              aria-label="add label"
+            >
+              <LabelOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Archive">
+            <IconButton size="small" onClick={handleArchive} aria-label="archive">
+              <ArchiveOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </CardActions>
         
-        {labels.length > 0 && (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 2 }}>
-            {labels.map((label, index) => (
-              <Chip 
-                key={index} 
-                label={label} 
-                size="small" 
-                onDelete={() => handleRemoveLabel(label)}
+        {/* Color menu */}
+        <Menu
+          id="color-menu"
+          anchorEl={colorMenuAnchor}
+          open={colorMenuOpen}
+          onClose={handleColorMenuClose}
+        >
+          <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
+            {colors.map((colorOption, index) => (
+              <Box
+                key={index}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  m: 0.5,
+                  borderRadius: "50%",
+                  backgroundColor: colorOption,
+                  cursor: "pointer",
+                  border: color === colorOption ? "2px solid #000" : "1px solid #ddd",
+                }}
+                onClick={() => handleColorSelect(colorOption)}
               />
             ))}
           </Box>
-        )}
-      </CardContent>
-      <CardActions 
-        sx={{ 
-          display: { xs: "flex", sm: "none" }, 
-          justifyContent: "flex-start",
-          p: 1
-        }}
-      >
-        <Tooltip title="Delete">
-          <IconButton size="small" onClick={handleDelete} aria-label="delete">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Change color">
-          <IconButton 
-            size="small" 
-            onClick={handleColorMenuOpen} 
-            aria-label="change color"
-            aria-controls={colorMenuOpen ? "color-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={colorMenuOpen ? "true" : undefined}
-          >
-            <ColorLensOutlinedIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Add label">
-          <IconButton 
-            size="small" 
-            onClick={handleLabelDialogOpen} 
-            aria-label="add label"
-          >
-            <LabelOutlinedIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Archive">
-          <IconButton size="small" onClick={handleArchive} aria-label="archive">
-            <ArchiveOutlinedIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </CardActions>
-      
-      {/* Color menu */}
-      <Menu
-        id="color-menu"
-        anchorEl={colorMenuAnchor}
-        open={colorMenuOpen}
-        onClose={handleColorMenuClose}
-      >
-        <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
-          {colors.map((colorOption, index) => (
-            <Box
-              key={index}
-              sx={{
-                width: 40,
-                height: 40,
-                m: 0.5,
-                borderRadius: "50%",
-                backgroundColor: colorOption,
-                cursor: "pointer",
-                border: color === colorOption ? "2px solid #000" : "1px solid #ddd",
+        </Menu>
+        
+        {/* Label dialog */}
+        <Dialog open={labelDialogOpen} onClose={handleLabelDialogClose}>
+          <DialogTitle>Add a label</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="label"
+              label="New label"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={newLabel}
+              onChange={(e) => setNewLabel(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleAddLabel();
+                }
               }}
-              onClick={() => handleColorSelect(colorOption)}
             />
-          ))}
-        </Box>
-      </Menu>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleLabelDialogClose}>Cancel</Button>
+            <Button onClick={handleAddLabel}>Add</Button>
+          </DialogActions>
+        </Dialog>
+      </Card>
       
-      {/* Label dialog */}
-      <Dialog open={labelDialogOpen} onClose={handleLabelDialogClose}>
-        <DialogTitle>Add a label</DialogTitle>
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Delete this note?"}
+        </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="label"
-            label="New label"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                handleAddLabel();
-              }
-            }}
-          />
+          <Typography variant="body1">
+            This action cannot be undone. Are you sure you want to delete this note?
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleLabelDialogClose}>Cancel</Button>
-          <Button onClick={handleAddLabel}>Add</Button>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
-    </Card>
+    </>
   );
 }
 
