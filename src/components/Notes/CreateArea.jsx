@@ -46,6 +46,14 @@ function CreateArea(props) {
   // Adjust colors for dark mode
   const isDarkMode = props.darkMode;
   const adjustedColor = isDarkMode && note.color === "#ffffff" ? "#1e1e1e" : note.color;
+  
+  // Set text color based on background color and dark mode
+  const getTextFieldColor = () => {
+    if (isDarkMode) {
+      return note.color === "#ffffff" ? "#ffffff" : "text.primary";
+    }
+    return "text.primary";
+  };
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -145,8 +153,14 @@ function CreateArea(props) {
                   variant="standard"
                   InputProps={{
                     disableUnderline: true,
+                    style: { color: isDarkMode ? "#ffffff" : "inherit" }
                   }}
-                  sx={{ mb: 1 }}
+                  sx={{ 
+                    mb: 1,
+                    "& .MuiInputBase-input::placeholder": {
+                      color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)"
+                    }
+                  }}
                 />
               )}
               <TextField
@@ -161,6 +175,12 @@ function CreateArea(props) {
                 variant="standard"
                 InputProps={{
                   disableUnderline: true,
+                  style: { color: isDarkMode ? "#ffffff" : "inherit" }
+                }}
+                sx={{
+                  "& .MuiInputBase-input::placeholder": {
+                    color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)" 
+                  }
                 }}
               />
               <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
@@ -248,8 +268,16 @@ function CreateArea(props) {
                 </Box>
               </Menu>
               {/* Label dialog */}
-              <Dialog open={labelDialogOpen} onClose={handleLabelDialogClose}>
-                <DialogTitle>Add a label</DialogTitle>
+              <Dialog 
+                open={labelDialogOpen} 
+                onClose={handleLabelDialogClose}
+                PaperProps={{
+                  sx: {
+                    bgcolor: isDarkMode ? '#1e1e1e' : '#ffffff'
+                  }
+                }}
+              >
+                <DialogTitle sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Add a label</DialogTitle>
                 <DialogContent>
                   <TextField
                     autoFocus
@@ -266,11 +294,17 @@ function CreateArea(props) {
                         handleAddLabel();
                       }
                     }}
+                    InputProps={{
+                      style: { color: isDarkMode ? '#ffffff' : 'inherit' }
+                    }}
+                    InputLabelProps={{
+                      style: { color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'inherit' }
+                    }}
                   />
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={handleLabelDialogClose}>Cancel</Button>
-                  <Button onClick={handleAddLabel}>Add</Button>
+                  <Button onClick={handleLabelDialogClose} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Cancel</Button>
+                  <Button onClick={handleAddLabel} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Add</Button>
                 </DialogActions>
               </Dialog>
             </form>

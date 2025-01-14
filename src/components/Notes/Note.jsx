@@ -51,8 +51,19 @@ function Note(props) {
   // Adjust colors for dark mode
   const isDarkMode = props.darkMode;
   const adjustedColor = isDarkMode && color === "#ffffff" ? "#1e1e1e" : color;
-  const textColor = isDarkMode && color === "#ffffff" ? "text.primary" : 
-                   (color !== "#ffffff" ? "text.primary" : "text.secondary");
+  const textColor = isDarkMode ? 
+                    (color === "#ffffff" ? "#ffffff" : determineTextColor(color)) : 
+                    (color !== "#ffffff" ? determineTextColor(color) : "text.secondary");
+  
+  // Helper function to determine appropriate text color based on background color
+  function determineTextColor(bgColor) {
+    // For light colored backgrounds, use dark text
+    if (["#ffffff", "#a7ffeb", "#cbf0f8", "#ccff90", "#fff475", "#fdcfe8"].includes(bgColor)) {
+      return "rgba(0, 0, 0, 0.87)";
+    }
+    // For darker colored backgrounds, use light text
+    return "rgba(255, 255, 255, 0.87)";
+  }
 
   function handleDeleteClick() {
     setDeleteDialogOpen(true);
@@ -150,10 +161,23 @@ function Note(props) {
               {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
             </IconButton>
           </Box>
-          <Typography variant="h5" component="div" gutterBottom>
+          <Typography 
+            variant="h5" 
+            component="div" 
+            gutterBottom
+            sx={{ 
+              color: isDarkMode && color === "#ffffff" ? "#ffffff" : determineTextColor(color)
+            }}
+          >
             {props.title}
           </Typography>
-          <Typography variant="body2" color={textColor} sx={{ whiteSpace: "pre-wrap" }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              whiteSpace: "pre-wrap",
+              color: textColor
+            }}
+          >
             {props.content}
           </Typography>
           
@@ -240,8 +264,16 @@ function Note(props) {
         </Menu>
         
         {/* Label dialog */}
-        <Dialog open={labelDialogOpen} onClose={handleLabelDialogClose}>
-          <DialogTitle>Add a label</DialogTitle>
+        <Dialog 
+          open={labelDialogOpen} 
+          onClose={handleLabelDialogClose}
+          PaperProps={{
+            sx: {
+              bgcolor: isDarkMode ? '#1e1e1e' : '#ffffff'
+            }
+          }}
+        >
+          <DialogTitle sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Add a label</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
@@ -258,11 +290,17 @@ function Note(props) {
                   handleAddLabel();
                 }
               }}
+              InputProps={{
+                style: { color: isDarkMode ? '#ffffff' : 'inherit' }
+              }}
+              InputLabelProps={{
+                style: { color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'inherit' }
+              }}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleLabelDialogClose}>Cancel</Button>
-            <Button onClick={handleAddLabel}>Add</Button>
+            <Button onClick={handleLabelDialogClose} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Cancel</Button>
+            <Button onClick={handleAddLabel} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Add</Button>
           </DialogActions>
         </Dialog>
       </Card>
@@ -273,17 +311,22 @@ function Note(props) {
         onClose={handleDeleteCancel}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
+        PaperProps={{
+          sx: {
+            bgcolor: isDarkMode ? '#1e1e1e' : '#ffffff'
+          }
+        }}
       >
-        <DialogTitle id="alert-dialog-title">
+        <DialogTitle id="alert-dialog-title" sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>
           {"Delete this note?"}
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>
             This action cannot be undone. Are you sure you want to delete this note?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteCancel} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Cancel</Button>
           <Button onClick={handleDeleteConfirm} color="error" autoFocus>
             Delete
           </Button>
