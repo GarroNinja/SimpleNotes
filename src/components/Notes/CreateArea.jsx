@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Paper, 
   TextField, 
@@ -45,6 +45,22 @@ function CreateArea(props) {
   
   // Adjust colors for dark mode
   const isDarkMode = props.darkMode;
+  
+  // Force the default color to dark when in dark mode on component mount or dark mode changes
+  useEffect(() => {
+    if (isDarkMode && note.color === "#ffffff") {
+      setNote(prevNote => ({
+        ...prevNote,
+        color: "#1e1e1e"
+      }));
+    } else if (!isDarkMode && note.color === "#1e1e1e") {
+      setNote(prevNote => ({
+        ...prevNote,
+        color: "#ffffff"
+      }));
+    }
+  }, [isDarkMode]);
+  
   const adjustedColor = isDarkMode && note.color === "#ffffff" ? "#1e1e1e" : note.color;
   
   // Set text color based on background color and dark mode
@@ -71,7 +87,7 @@ function CreateArea(props) {
     setNote({
       title: "",
       content: "",
-      color: "#ffffff",
+      color: isDarkMode ? "#1e1e1e" : "#ffffff",
       labels: []
     });
     setIsExpanded(false);
@@ -138,7 +154,8 @@ function CreateArea(props) {
             elevation={3} 
             sx={{ 
               p: 2, 
-              backgroundColor: adjustedColor, 
+              backgroundColor: adjustedColor,
+              color: isDarkMode ? "#ffffff" : "inherit",
               borderRadius: 2 
             }}
           >
@@ -157,8 +174,12 @@ function CreateArea(props) {
                   }}
                   sx={{ 
                     mb: 1,
+                    "& .MuiInputBase-input": { 
+                      color: isDarkMode ? "#ffffff" : "inherit" 
+                    },
                     "& .MuiInputBase-input::placeholder": {
-                      color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)"
+                      color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
+                      opacity: 1
                     }
                   }}
                 />
@@ -178,8 +199,12 @@ function CreateArea(props) {
                   style: { color: isDarkMode ? "#ffffff" : "inherit" }
                 }}
                 sx={{
+                  "& .MuiInputBase-input": { 
+                    color: isDarkMode ? "#ffffff" : "inherit" 
+                  },
                   "& .MuiInputBase-input::placeholder": {
-                    color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)" 
+                    color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
+                    opacity: 1
                   }
                 }}
               />
@@ -248,6 +273,12 @@ function CreateArea(props) {
                 anchorEl={colorMenuAnchor}
                 open={colorMenuOpen}
                 onClose={handleColorMenuClose}
+                PaperProps={{
+                  sx: {
+                    bgcolor: isDarkMode ? '#1e1e1e' : '#ffffff',
+                    border: isDarkMode ? '1px solid #333' : 'none'
+                  }
+                }}
               >
                 <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
                   {colors.map((colorOption, index) => (
@@ -260,7 +291,9 @@ function CreateArea(props) {
                         borderRadius: "50%",
                         backgroundColor: colorOption,
                         cursor: "pointer",
-                        border: note.color === colorOption ? "2px solid #000" : "1px solid #ddd",
+                        border: note.color === colorOption 
+                          ? (isDarkMode ? "2px solid #fff" : "2px solid #000") 
+                          : (isDarkMode ? "1px solid #555" : "1px solid #ddd"),
                       }}
                       onClick={() => handleColorSelect(colorOption)}
                     />
