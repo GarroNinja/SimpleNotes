@@ -13,7 +13,8 @@ import {
   ListItemButton,
   useMediaQuery,
   useTheme,
-  Divider
+  Divider,
+  Box
 } from "@mui/material";
 import { styled, alpha } from "@mui/material/styles";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
@@ -139,43 +140,63 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
           color: "#ffffff" // Keep text white
         }}
       >
-        <Toolbar>
-          {isMobile && (
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
+        <Toolbar
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: { xs: 'flex-start', sm: 'space-between' },
+            width: '100%',
+            minHeight: { xs: 56, sm: 64 },
+            px: { xs: 1, sm: 3 },
+            py: { xs: 1, sm: 0 },
+            gap: { xs: 1, sm: 0 },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', width: { xs: '100%', sm: 'auto' } }}>
+            {isMobile && (
+              <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="menu"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <IconButton edge="start" color="inherit" aria-label="logo" sx={{ mr: 1 }}>
+              <LightbulbOutlinedIcon fontSize={isMobile ? 'medium' : 'large'} />
             </IconButton>
-          )}
-          <IconButton edge="start" color="inherit" aria-label="logo" sx={{ mr: 2, display: { xs: isMobile ? 'none' : 'flex', sm: 'flex' } }}>
-            <LightbulbOutlinedIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ display: { xs: "none", sm: "block" } }}>
-            SimpleNotes
-          </Typography>
-          <Search sx={{ 
-            flexGrow: 1, 
-            maxWidth: { xs: '100%', sm: 400 },
-            backgroundColor: alpha("#ffffff", 0.15), // Always use light theme style
-            "&:hover": {
-              backgroundColor: alpha("#ffffff", 0.25), // Always use light theme style
-            },
-          }}>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ "aria-label": "search" }}
-              onChange={(e) => onSearch && onSearch(e.target.value)}
-              sx={{ color: "#ffffff" }} // Always keep text white
-            />
-          </Search>
-          <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: 2 }}>
+            <Typography 
+              variant={isMobile ? 'subtitle1' : 'h6'} 
+              noWrap 
+              component="div" 
+              sx={{
+                display: 'block',
+                fontWeight: 600,
+                fontSize: isMobile ? '1.1rem' : '1.25rem',
+                flexGrow: 0,
+                ml: 0.5
+              }}
+            >
+              SimpleNotes
+            </Typography>
+          </Box>
+          <Box sx={{ width: { xs: '100%', sm: 'auto' }, mt: { xs: 1, sm: 0 }, flexGrow: { xs: 1, sm: 0 } }}>
+            <Search sx={{ width: { xs: '100%', sm: 400 } }}>
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                placeholder="Search…"
+                inputProps={{ "aria-label": "search" }}
+                onChange={(e) => onSearch && onSearch(e.target.value)}
+                sx={{ color: "#ffffff" }} // Always keep text white
+              />
+            </Search>
+          </Box>
+          <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: { xs: 0, sm: 2 }, mt: { xs: 1, sm: 0 } }}>
             {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Toolbar>
