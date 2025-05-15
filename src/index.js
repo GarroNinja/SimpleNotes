@@ -2,6 +2,10 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./components/App";
 import reportWebVitals from "./reportWebVitals";
+import "./index.css";
+
+// Add loading class to prevent transition flashing
+document.documentElement.classList.add('js-loading');
 
 // Create a root
 const container = document.getElementById("root");
@@ -13,6 +17,14 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// Remove loading class after render to allow transitions
+window.addEventListener('load', () => {
+  // Short delay to ensure everything is loaded
+  setTimeout(() => {
+    document.documentElement.classList.remove('js-loading');
+  }, 100);
+});
 
 // Report web vitals
 reportWebVitals();

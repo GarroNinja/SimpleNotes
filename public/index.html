@@ -17,6 +17,28 @@
     />
     <link rel="stylesheet" href="styles.css" />
     <title>SimpleNotes</title>
+    <script>
+      // Apply theme class immediately before any rendering to prevent flashing
+      (function() {
+        try {
+          var darkMode = localStorage.getItem('darkMode');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDarkMode = darkMode ? JSON.parse(darkMode) : prefersDark;
+          
+          if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            document.body.classList.remove('light-mode');
+          } else {
+            document.body.classList.remove('dark-mode');
+            document.body.classList.add('light-mode');
+          }
+        } catch (e) {
+          // Default to light mode if error
+          document.body.classList.remove('dark-mode');
+          document.body.classList.add('light-mode');
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

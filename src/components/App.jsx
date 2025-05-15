@@ -57,18 +57,35 @@ function App() {
     return savedMode !== null ? JSON.parse(savedMode) : prefersDarkMode;
   });
 
-  // Save dark mode preference to localStorage
+  // Save dark mode preference to localStorage and apply immediately
   useEffect(() => {
+    // Save to localStorage
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
     
     // Update document's body class and meta theme color
     if (darkMode) {
       document.body.classList.add('dark-mode');
       document.body.classList.remove('light-mode');
+      document.documentElement.style.setProperty('--app-bg-color', limeGreenTheme.dark.background);
+      document.documentElement.style.setProperty('--app-text-color', limeGreenTheme.dark.text);
+      document.documentElement.style.setProperty('--note-bg-color', limeGreenTheme.dark.noteBackground);
     } else {
       document.body.classList.remove('dark-mode');
       document.body.classList.add('light-mode');
+      document.documentElement.style.setProperty('--app-bg-color', limeGreenTheme.light.background);
+      document.documentElement.style.setProperty('--app-text-color', limeGreenTheme.light.text);
+      document.documentElement.style.setProperty('--note-bg-color', limeGreenTheme.light.noteBackground);
     }
+    
+    // Force update for input backgrounds
+    const inputs = document.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+      if (darkMode && !input.closest('.MuiAppBar-root')) {
+        input.style.backgroundColor = '#1e1e1e';
+      } else {
+        input.style.backgroundColor = input.closest('.MuiAppBar-root') ? 'transparent' : 'white';
+      }
+    });
     
     // Update meta theme color for mobile browsers
     const metaThemeColor = document.querySelector("meta[name=theme-color]");

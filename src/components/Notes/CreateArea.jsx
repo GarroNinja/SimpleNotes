@@ -79,6 +79,17 @@ function CreateArea(props) {
     isPinned: false
   });
   
+  // Update note color when theme changes
+  useEffect(() => {
+    // When theme changes, update the note color if it's the default
+    if (note.color === "#2d2d2d" || note.color === "#ffffff") {
+      setNote(prevNote => ({
+        ...prevNote,
+        color: theme.palette.mode === 'dark' ? "#2d2d2d" : "#ffffff"
+      }));
+    }
+  }, [theme.palette.mode, note.color]);
+  
   // Force black backgrounds for inputs in dark mode
   useEffect(() => {
     // Create a style element to override browser defaults
