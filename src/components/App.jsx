@@ -9,11 +9,10 @@ import {
   IconButton,
   useMediaQuery,
   Snackbar,
-  Alert
+  Alert,
+  CircularProgress
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Header from "./Layout/Header";
 import Footer from "./Layout/Footer";
 import Note from "./Notes/Note";
@@ -29,6 +28,7 @@ const limeGreenTheme = {
     background: '#f9fbe7',
     paper: '#ffffff',
     text: '#212121',
+    noteBackground: '#ffffff'
   },
   dark: {
     primary: '#8bc34a',    // Lime green 
@@ -37,6 +37,7 @@ const limeGreenTheme = {
     background: '#212121',
     paper: '#1e1e1e',
     text: '#ffffff',
+    noteBackground: '#2d2d2d'
   }
 };
 
@@ -59,11 +60,20 @@ function App() {
   // Save dark mode preference to localStorage
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
-    // Update document's body class for additional styling
+    
+    // Update document's body class and meta theme color
     if (darkMode) {
       document.body.classList.add('dark-mode');
+      document.body.classList.remove('light-mode');
     } else {
       document.body.classList.remove('dark-mode');
+      document.body.classList.add('light-mode');
+    }
+    
+    // Update meta theme color for mobile browsers
+    const metaThemeColor = document.querySelector("meta[name=theme-color]");
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", darkMode ? '#212121' : '#8bc34a');
     }
   }, [darkMode]);
 
@@ -285,6 +295,7 @@ function App() {
       text: {
         primary: limeGreenTheme[darkMode ? 'dark' : 'light'].text,
       },
+      noteBackground: limeGreenTheme[darkMode ? 'dark' : 'light'].noteBackground,
     },
     components: {
       MuiAppBar: {
@@ -305,9 +316,25 @@ function App() {
         styleOverrides: {
           body: {
             transition: 'background-color 0.3s, color 0.3s',
+            backgroundColor: limeGreenTheme[darkMode ? 'dark' : 'light'].background,
+            color: limeGreenTheme[darkMode ? 'dark' : 'light'].text,
           },
         },
-      }
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            transition: 'background-color 0.3s, color 0.3s',
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: limeGreenTheme[darkMode ? 'dark' : 'light'].paper,
+          },
+        },
+      },
     },
     typography: {
       fontFamily: '"McLaren", cursive',
@@ -327,35 +354,44 @@ function App() {
         />
         <Container>
           <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+            display: { xs: 'none', sm: 'flex' },
+            justifyContent: 'flex-start', 
             alignItems: 'center',
             borderBottom: 1, 
             borderColor: "divider", 
             mb: 2,
-            display: { xs: 'none', sm: 'flex' } // Hide on mobile as we use drawer instead
           }}>
             <Tabs 
               value={activeTab} 
               onChange={handleTabChange} 
               aria-label="note tabs"
+              sx={{ 
+                '& .MuiTabs-indicator': {
+                  backgroundColor: theme.palette.primary.main 
+                }
+              }}
             >
               <Tab label="Notes" />
               <Tab label="Archive" />
             </Tabs>
-            <IconButton onClick={toggleDarkMode} color="inherit">
-              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
           </Box>
 
           {loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-              <p>Loading notes...</p>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', my: 4 }}>
+              <CircularProgress color="primary" />
             </Box>
           )}
 
           {error && !loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              my: 4, 
+              p: 3, 
+              borderRadius: 2,
+              backgroundColor: theme.palette.error.light,
+              color: theme.palette.error.contrastText
+            }}>
               <p>{error}</p>
             </Box>
           )}
@@ -381,6 +417,18 @@ function App() {
                     />
                   </Grid>
                 ))}
+                {filteredNotes.length === 0 && !loading && !error && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    width: '100%', 
+                    mt: 4, 
+                    color: theme.palette.text.secondary,
+                    textAlign: 'center'
+                  }}>
+                    <p>No notes yet. Create one to get started!</p>
+                  </Box>
+                )}
               </Grid>
             </>
           )}
@@ -403,6 +451,18 @@ function App() {
                   />
                 </Grid>
               ))}
+              {filteredArchivedNotes.length === 0 && !loading && !error && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  width: '100%', 
+                  mt: 4, 
+                  color: theme.palette.text.secondary,
+                  textAlign: 'center'
+                }}>
+                  <p>No archived notes yet.</p>
+                </Box>
+              )}
             </Grid>
           )}
         </Container>

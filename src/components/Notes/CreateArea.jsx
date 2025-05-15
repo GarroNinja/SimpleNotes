@@ -48,31 +48,41 @@ function CreateArea(props) {
   });
   
   // Adjust colors for dark mode
-  const isDarkMode = props.darkMode;
+  const isDarkMode = theme.palette.mode === 'dark';
   
   // Force the default color to dark when in dark mode on component mount or dark mode changes
   useEffect(() => {
     if (isDarkMode && note.color === "#ffffff") {
       setNote(prevNote => ({
         ...prevNote,
-        color: "#1e1e1e"
+        color: theme.palette.noteBackground
       }));
-    } else if (!isDarkMode && note.color === "#1e1e1e") {
+    } else if (!isDarkMode && note.color === theme.palette.noteBackground) {
       setNote(prevNote => ({
         ...prevNote,
         color: "#ffffff"
       }));
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, theme.palette.noteBackground]);
   
-  const adjustedColor = isDarkMode && note.color === "#ffffff" ? "#1e1e1e" : note.color;
-  
-  // Set text color based on background color and dark mode
-  const getTextFieldColor = () => {
-    if (isDarkMode) {
-      return note.color === "#ffffff" ? "#ffffff" : "text.primary";
+  // Get the adjusted background color for the note
+  const getBackgroundColor = (color) => {
+    if (color === "#ffffff" && isDarkMode) {
+      return theme.palette.noteBackground;
     }
-    return "text.primary";
+    return color;
+  };
+  
+  // Get proper text color based on background color
+  const getTextColor = (bgColor) => {
+    // If it's dark mode and using the default color, use the theme text color
+    if (isDarkMode && (bgColor === "#ffffff" || bgColor === theme.palette.noteBackground)) {
+      return theme.palette.text.primary;
+    }
+    
+    // For colored notes, determine if we need light or dark text
+    const isLightColor = ["#ffffff", "#a7ffeb", "#cbf0f8", "#ccff90", "#fff475", "#fdcfe8"].includes(bgColor);
+    return isLightColor ? theme.palette.text.primary : theme.palette.getContrastText(bgColor);
   };
 
   function handleChange(event) {
@@ -91,14 +101,19 @@ function CreateArea(props) {
       return; // Don't add empty notes
     }
     
-    props.onAdd(note);
+    props.onAdd({
+      ...note,
+      color: getBackgroundColor(note.color)
+    });
+    
     setNote({
       title: "",
       content: "",
-      color: isDarkMode ? "#1e1e1e" : "#ffffff",
+      color: isDarkMode ? theme.palette.noteBackground : "#ffffff",
       labels: [],
       isPinned: false
     });
+    
     setIsExpanded(false);
     event.preventDefault();
   }
@@ -155,6 +170,10 @@ function CreateArea(props) {
     }));
   }
 
+  // Get the current background color to display
+  const displayBackgroundColor = getBackgroundColor(note.color);
+  const textColor = getTextColor(displayBackgroundColor);
+
   return (
     <ClickAwayListener onClickAway={() => isExpanded && note.title === "" && note.content === "" && setIsExpanded(false)}>
       <Grid container justifyContent="center" sx={{ mt: 2, mb: 4 }}>
@@ -163,16 +182,16 @@ function CreateArea(props) {
             elevation={3} 
             sx={{ 
               p: 2, 
-              backgroundColor: adjustedColor,
-              color: isDarkMode ? "#ffffff" : "inherit",
+              backgroundColor: displayBackgroundColor,
+              color: textColor,
               borderRadius: 2,
-              transition: "background-color 0.3s ease",
+              transition: "all 0.3s ease",
               "&:hover": {
                 boxShadow: theme.shadows[6]
               }
             }}
           >
-            <form className="create-note">
+            <form className="create-note" onSubmit={submitNote}>
               {isExpanded && (
                 <TextField
                   name="title"
@@ -183,16 +202,16 @@ function CreateArea(props) {
                   variant="standard"
                   InputProps={{
                     disableUnderline: true,
-                    style: { color: isDarkMode ? "#ffffff" : "inherit" }
+                    style: { color: textColor }
                   }}
                   sx={{ 
                     mb: 1,
                     "& .MuiInputBase-input": { 
-                      color: isDarkMode ? "#ffffff" : "inherit",
+                      color: textColor,
                       fontSize: "1.2rem"
                     },
                     "& .MuiInputBase-input::placeholder": {
-                      color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
+                      color: textColor ? `${textColor}99` : undefined,
                       opacity: 1
                     }
                   }}
@@ -210,14 +229,14 @@ function CreateArea(props) {
                 variant="standard"
                 InputProps={{
                   disableUnderline: true,
-                  style: { color: isDarkMode ? "#ffffff" : "inherit" }
+                  style: { color: textColor }
                 }}
                 sx={{
                   "& .MuiInputBase-input": { 
-                    color: isDarkMode ? "#ffffff" : "inherit" 
+                    color: textColor 
                   },
                   "& .MuiInputBase-input::placeholder": {
-                    color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
+                    color: textColor ? `${textColor}99` : undefined,
                     opacity: 1
                   }
                 }}
@@ -233,6 +252,7 @@ function CreateArea(props) {
                         aria-controls={colorMenuOpen ? "color-menu" : undefined}
                         aria-haspopup="true"
                         aria-expanded={colorMenuOpen ? "true" : undefined}
+                        sx={{ color: textColor }}
                       >
                         <ColorLensOutlinedIcon fontSize="small" />
                       </IconButton>
@@ -244,6 +264,7 @@ function CreateArea(props) {
                         size="small"
                         onClick={handleLabelDialogOpen}
                         aria-label="add label"
+                        sx={{ color: textColor }}
                       >
                         <LabelOutlinedIcon fontSize="small" />
                       </IconButton>
@@ -259,10 +280,10 @@ function CreateArea(props) {
                         size="small" 
                         onDelete={() => handleRemoveLabel(label)}
                         sx={{
-                          backgroundColor: theme.palette.mode === 'dark' 
+                          backgroundColor: isDarkMode 
                             ? 'rgba(255, 255, 255, 0.1)' 
                             : 'rgba(0, 0, 0, 0.08)',
-                          color: theme.palette.text.primary
+                          color: textColor
                         }}
                       />
                     ))}
@@ -271,7 +292,7 @@ function CreateArea(props) {
                 <Zoom in={isExpanded}>
                   <Tooltip title="Add Note">
                     <IconButton 
-                      onClick={submitNote}
+                      type="submit"
                       color="primary"
                       sx={{ 
                         backgroundColor: theme.palette.primary.main,
@@ -295,6 +316,12 @@ function CreateArea(props) {
             anchorEl={colorMenuAnchor}
             open={colorMenuOpen}
             onClose={handleColorMenuClose}
+            PaperProps={{
+              sx: {
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary
+              }
+            }}
           >
             <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
               {colors.map((colorOption, index) => (
@@ -307,7 +334,9 @@ function CreateArea(props) {
                     m: 0.5,
                     border: "1px solid #e0e0e0",
                     borderRadius: "50%",
-                    backgroundColor: isDarkMode && colorOption === "#ffffff" ? "#1e1e1e" : colorOption,
+                    backgroundColor: isDarkMode && colorOption === "#ffffff" 
+                      ? theme.palette.noteBackground 
+                      : colorOption,
                     cursor: "pointer",
                     "&:hover": {
                       border: `2px solid ${theme.palette.primary.main}`,
@@ -322,7 +351,16 @@ function CreateArea(props) {
           </Menu>
 
           {/* Label dialog */}
-          <Dialog open={labelDialogOpen} onClose={handleLabelDialogClose}>
+          <Dialog 
+            open={labelDialogOpen} 
+            onClose={handleLabelDialogClose}
+            PaperProps={{
+              sx: {
+                backgroundColor: theme.palette.background.paper,
+                color: theme.palette.text.primary
+              }
+            }}
+          >
             <DialogTitle>Add Label</DialogTitle>
             <DialogContent>
               <TextField
