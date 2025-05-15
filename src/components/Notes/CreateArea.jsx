@@ -12,12 +12,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip
+  Chip,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { Box } from "@mui/system";
 import ColorLensOutlinedIcon from "@mui/icons-material/ColorLensOutlined";
-import { Menu } from "@mui/material";
+import { Menu, MenuItem } from "@mui/material";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 
 const colors = [
@@ -30,9 +31,11 @@ const colors = [
   "#cbf0f8", // blue
   "#d7aefb", // purple
   "#fdcfe8", // pink
+  "#8bc34a", // lime green (our primary theme color)
 ];
 
 function CreateArea(props) {
+  const theme = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
   const [colorMenuAnchor, setColorMenuAnchor] = useState(null);
   const colorMenuOpen = Boolean(colorMenuAnchor);
@@ -40,7 +43,8 @@ function CreateArea(props) {
     title: "",
     content: "",
     color: "#ffffff",
-    labels: []
+    labels: [],
+    isPinned: false
   });
   
   // Adjust colors for dark mode
@@ -83,12 +87,17 @@ function CreateArea(props) {
   }
 
   function submitNote(event) {
+    if (note.title.trim() === "" && note.content.trim() === "") {
+      return; // Don't add empty notes
+    }
+    
     props.onAdd(note);
     setNote({
       title: "",
       content: "",
       color: isDarkMode ? "#1e1e1e" : "#ffffff",
-      labels: []
+      labels: [],
+      isPinned: false
     });
     setIsExpanded(false);
     event.preventDefault();
@@ -156,7 +165,11 @@ function CreateArea(props) {
               p: 2, 
               backgroundColor: adjustedColor,
               color: isDarkMode ? "#ffffff" : "inherit",
-              borderRadius: 2 
+              borderRadius: 2,
+              transition: "background-color 0.3s ease",
+              "&:hover": {
+                boxShadow: theme.shadows[6]
+              }
             }}
           >
             <form className="create-note">
@@ -175,7 +188,8 @@ function CreateArea(props) {
                   sx={{ 
                     mb: 1,
                     "& .MuiInputBase-input": { 
-                      color: isDarkMode ? "#ffffff" : "inherit" 
+                      color: isDarkMode ? "#ffffff" : "inherit",
+                      fontSize: "1.2rem"
                     },
                     "& .MuiInputBase-input::placeholder": {
                       color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.6)",
@@ -244,104 +258,110 @@ function CreateArea(props) {
                         label={label} 
                         size="small" 
                         onDelete={() => handleRemoveLabel(label)}
+                        sx={{
+                          backgroundColor: theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : 'rgba(0, 0, 0, 0.08)',
+                          color: theme.palette.text.primary
+                        }}
                       />
                     ))}
                   </Box>
                 )}
                 <Zoom in={isExpanded}>
-                  <Button
-                    onClick={submitNote}
-                    variant="contained"
-                    color="primary"
-                    sx={{ 
-                      backgroundColor: "#f5ba13", 
-                      borderRadius: "50%", 
-                      width: "40px", 
-                      height: "40px", 
-                      minWidth: "auto",
-                      "&:hover": { 
-                        backgroundColor: "#e0a800" 
-                      }
-                    }}
-                  >
-                    <AddIcon />
-                  </Button>
+                  <Tooltip title="Add Note">
+                    <IconButton 
+                      onClick={submitNote}
+                      color="primary"
+                      sx={{ 
+                        backgroundColor: theme.palette.primary.main,
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: theme.palette.primary.dark,
+                        }
+                      }}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Tooltip>
                 </Zoom>
               </Box>
-              <Menu
-                id="color-menu"
-                anchorEl={colorMenuAnchor}
-                open={colorMenuOpen}
-                onClose={handleColorMenuClose}
-                PaperProps={{
-                  sx: {
-                    bgcolor: isDarkMode ? '#1e1e1e' : '#ffffff',
-                    border: isDarkMode ? '1px solid #333' : 'none'
-                  }
-                }}
-              >
-                <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
-                  {colors.map((colorOption, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        m: 0.5,
-                        borderRadius: "50%",
-                        backgroundColor: colorOption,
-                        cursor: "pointer",
-                        border: note.color === colorOption 
-                          ? (isDarkMode ? "2px solid #fff" : "2px solid #000") 
-                          : (isDarkMode ? "1px solid #555" : "1px solid #ddd"),
-                      }}
-                      onClick={() => handleColorSelect(colorOption)}
-                    />
-                  ))}
-                </Box>
-              </Menu>
-              {/* Label dialog */}
-              <Dialog 
-                open={labelDialogOpen} 
-                onClose={handleLabelDialogClose}
-                PaperProps={{
-                  sx: {
-                    bgcolor: isDarkMode ? '#1e1e1e' : '#ffffff'
-                  }
-                }}
-              >
-                <DialogTitle sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Add a label</DialogTitle>
-                <DialogContent>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    id="label"
-                    label="New label"
-                    type="text"
-                    fullWidth
-                    variant="standard"
-                    value={newLabel}
-                    onChange={(e) => setNewLabel(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddLabel();
-                      }
-                    }}
-                    InputProps={{
-                      style: { color: isDarkMode ? '#ffffff' : 'inherit' }
-                    }}
-                    InputLabelProps={{
-                      style: { color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'inherit' }
-                    }}
-                  />
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={handleLabelDialogClose} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Cancel</Button>
-                  <Button onClick={handleAddLabel} sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>Add</Button>
-                </DialogActions>
-              </Dialog>
             </form>
           </Paper>
+          
+          {/* Color menu */}
+          <Menu
+            id="color-menu"
+            anchorEl={colorMenuAnchor}
+            open={colorMenuOpen}
+            onClose={handleColorMenuClose}
+          >
+            <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
+              {colors.map((colorOption, index) => (
+                <Box
+                  key={index}
+                  onClick={() => handleColorSelect(colorOption)}
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    m: 0.5,
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "50%",
+                    backgroundColor: isDarkMode && colorOption === "#ffffff" ? "#1e1e1e" : colorOption,
+                    cursor: "pointer",
+                    "&:hover": {
+                      border: `2px solid ${theme.palette.primary.main}`,
+                    },
+                    ...(note.color === colorOption && {
+                      border: `2px solid ${theme.palette.primary.main}`,
+                    }),
+                  }}
+                />
+              ))}
+            </Box>
+          </Menu>
+
+          {/* Label dialog */}
+          <Dialog open={labelDialogOpen} onClose={handleLabelDialogClose}>
+            <DialogTitle>Add Label</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                id="label"
+                label="Label"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAddLabel();
+                  }
+                }}
+              />
+              {note.labels.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ mb: 1 }}>Current Labels:</Box>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {note.labels.map((label, index) => (
+                      <Chip 
+                        key={index} 
+                        label={label} 
+                        size="small" 
+                        onDelete={() => handleRemoveLabel(label)}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleLabelDialogClose}>Cancel</Button>
+              <Button onClick={handleAddLabel} color="primary">Add</Button>
+            </DialogActions>
+          </Dialog>
         </Grid>
       </Grid>
     </ClickAwayListener>

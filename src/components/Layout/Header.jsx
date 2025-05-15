@@ -117,7 +117,13 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
 
   return (
     <>
-      <AppBar position="static" color="primary" sx={{ backgroundColor: "#f5ba13" }}>
+      <AppBar 
+        position="static" 
+        elevation={4}
+        sx={{ 
+          backgroundColor: theme.palette.primary.main,
+        }}
+      >
         <Toolbar>
           {isMobile && (
             <IconButton
@@ -162,7 +168,12 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
         }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: 240,
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary
+          },
         }}
       >
         {drawer}
