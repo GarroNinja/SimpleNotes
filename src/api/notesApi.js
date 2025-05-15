@@ -15,9 +15,9 @@ const determineBaseUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // Second priority: In production with no env var, rely on relative API path
-  // This assumes API is hosted on the same domain or properly configured in Vercel
+  // Second priority: In production with no env var, use relative path
   if (isProduction) {
+    // On Vercel, we use the root path as our API should be accessible at the same domain
     return '/api';
   }
   
@@ -34,13 +34,19 @@ console.log(`Using API endpoint: ${API_BASE_URL}, Mobile: ${isMobile}, Productio
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || 'An error occurred');
+  try {
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('API error response:', data);
+      throw new Error(data.error || 'An error occurred');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error parsing response:', error);
+    throw new Error('Invalid response from server. Please try again later.');
   }
-  
-  return data;
 };
 
 // Custom fetch with timeout and retry
@@ -58,17 +64,26 @@ const fetchWithTimeout = async (url, options = {}, timeout = 15000, retries = 3)
   const fetchOptions = {
     ...options,
     signal,
+    // Ensure credentials are included to maintain sessions if needed
+    credentials: 'same-origin'
   };
   
   // Set timeout
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
   try {
+    console.log(`Fetching ${url}...`);
     const response = await fetch(url, fetchOptions);
     clearTimeout(timeoutId);
+    
+    // Log response status for debugging
+    console.log(`Response from ${url}: ${response.status} ${response.statusText}`);
+    
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
+    
+    console.error(`Fetch error for ${url}:`, error);
     
     if (error.name === 'AbortError') {
       console.error(`Request to ${url} timed out after ${timeout}ms`);

@@ -4,17 +4,39 @@ const { pool, PORT } = require('./config');
 
 const app = express();
 
-// CORS configuration - allow any origin for maximum compatibility
+// CORS configuration for Vercel deployment
 const corsOptions = {
-  origin: '*', // Allow any origin to connect
+  origin: function(origin, callback) {
+    // Allow any origin in development and production
+    callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'Accept', 'Accept-Version', 'Content-Length', 'Content-MD5', 'Date', 'X-Api-Version'],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  maxAge: 3600 // 1 hour cache for preflight requests
 };
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// OPTIONS preflight handler
+app.options('*', cors(corsOptions));
+
+// Middleware to handle CORS preflight
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    // Handle OPTIONS requests explicitly to ensure they work correctly
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Global error handler middleware
 app.use((err, req, res, next) => {
@@ -26,9 +48,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Test database connection - using Supabase connection pooling
+// Setup database connection state
+let dbConnected = false;
+
+// Test database connection
 pool.connect()
-  .then(() => console.log('Connected to PostgreSQL database via Supabase connection pooling'))
+  .then(() => {
+    console.log('Connected to PostgreSQL database via Supabase connection pooling');
+    dbConnected = true;
+  })
   .catch(err => {
     console.error('Database connection error:', err.stack);
     console.error('Please check your DATABASE_URL environment variable is pointing to the Supabase pooler URL');
@@ -38,6 +66,13 @@ pool.connect()
 
 // Get all notes
 app.get('/api/notes', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   try {
     const result = await pool.query('SELECT * FROM notes WHERE archived = false ORDER BY created_at DESC');
     res.json(result.rows);
@@ -53,6 +88,13 @@ app.get('/api/notes', async (req, res) => {
 
 // Get archived notes
 app.get('/api/notes/archived', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   try {
     const result = await pool.query('SELECT * FROM notes WHERE archived = true ORDER BY created_at DESC');
     res.json(result.rows);
@@ -64,6 +106,13 @@ app.get('/api/notes/archived', async (req, res) => {
 
 // Add a new note
 app.post('/api/notes', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   const { title, content, color, labels, isPinned } = req.body;
   
   try {
@@ -80,6 +129,13 @@ app.post('/api/notes', async (req, res) => {
 
 // Update a note
 app.put('/api/notes/:id', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   const { id } = req.params;
   const { title, content, color, labels, isPinned, archived } = req.body;
   
@@ -102,6 +158,13 @@ app.put('/api/notes/:id', async (req, res) => {
 
 // Delete a note
 app.delete('/api/notes/:id', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   const { id } = req.params;
   
   try {
@@ -120,6 +183,13 @@ app.delete('/api/notes/:id', async (req, res) => {
 
 // Archive/Unarchive a note
 app.patch('/api/notes/:id/archive', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   const { id } = req.params;
   const { archived } = req.body;
   
@@ -142,6 +212,13 @@ app.patch('/api/notes/:id/archive', async (req, res) => {
 
 // Toggle pin status
 app.patch('/api/notes/:id/pin', async (req, res) => {
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      error: 'Database connection is not established',
+      message: 'The server is temporarily unable to connect to the database. Please try again later.'
+    });
+  }
+  
   const { id } = req.params;
   const { isPinned } = req.body;
   
@@ -164,24 +241,45 @@ app.patch('/api/notes/:id/pin', async (req, res) => {
 
 // Simple health check endpoint
 app.get('/health', (req, res) => {
-  // Test database connection with this health check
-  pool.query('SELECT NOW()')
-    .then(result => {
-      res.status(200).json({ 
-        status: 'OK', 
-        timestamp: new Date(),
-        database: 'connected',
-        dbTime: result.rows[0].now
+  const dbStatus = dbConnected ? 'connected' : 'disconnected';
+  
+  if (dbConnected) {
+    // Test database connection with this health check
+    pool.query('SELECT NOW()')
+      .then(result => {
+        res.status(200).json({ 
+          status: 'OK', 
+          timestamp: new Date(),
+          database: dbStatus,
+          dbTime: result.rows[0].now
+        });
+      })
+      .catch(err => {
+        dbConnected = false;
+        res.status(500).json({
+          status: 'ERROR',
+          timestamp: new Date(),
+          database: 'error',
+          error: err.message
+        });
       });
-    })
-    .catch(err => {
-      res.status(500).json({
-        status: 'ERROR',
-        timestamp: new Date(),
-        database: 'disconnected',
-        error: err.message
-      });
+  } else {
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date(),
+      database: dbStatus,
+      message: 'Database connection not established'
     });
+  }
+});
+
+// Default route for API check
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    status: 'API is running',
+    timestamp: new Date(),
+    databaseStatus: dbConnected ? 'connected' : 'disconnected'
+  });
 });
 
 // Start server
