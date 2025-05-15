@@ -22,7 +22,7 @@ import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import ColorLensOutlinedIcon from "@mui/icons-material/ColorLensOutlined";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
-import { Box, Menu, MenuItem } from "@mui/material";
+import { Box, Menu } from "@mui/material";
 
 const colors = [
   "#ffffff", // default

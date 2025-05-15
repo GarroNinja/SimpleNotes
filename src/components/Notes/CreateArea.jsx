@@ -152,7 +152,7 @@ function CreateArea(props) {
       const textareaElement = contentInputRef.current.querySelector('textarea');
       if (textareaElement) applyBg(textareaElement);
     }
-  }, [isExpanded, titleInputRef.current, contentInputRef.current, theme.palette.mode]);
+  }, [isExpanded, theme.palette.mode]);
   
   // Handle form input changes
   function handleChange(event) {

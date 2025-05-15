@@ -16,7 +16,7 @@ import {
   Divider,
   Box
 } from "@mui/material";
-import { styled, alpha } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
