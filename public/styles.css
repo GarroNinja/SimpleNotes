@@ -161,6 +161,11 @@ form {
   box-shadow: 0 1px 5px rgb(138, 137, 137);
 }
 
+body.dark-mode form {
+  background: #1e1e1e;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+
 form input,
 form textarea {
   width: 100%;
@@ -170,6 +175,12 @@ form textarea {
   font-size: 1.2em;
   font-family: inherit;
   resize: none;
+}
+
+body.dark-mode form input,
+body.dark-mode form textarea {
+  background-color: #1e1e1e;
+  color: #ffffff;
 }
 
 form button {

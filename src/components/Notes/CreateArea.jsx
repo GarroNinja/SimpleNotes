@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Paper, 
-  TextField, 
-  Button, 
   IconButton, 
   Zoom, 
   Grid, 
@@ -14,15 +12,23 @@ import {
   DialogActions,
   Chip,
   useTheme,
+  Box,
+  Typography,
+  Divider,
+  Menu,
+  Button,
+  TextField,
+  styled
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { Box } from "@mui/system";
 import ColorLensOutlinedIcon from "@mui/icons-material/ColorLensOutlined";
-import { Menu, MenuItem } from "@mui/material";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 
+// Note color options
 const colors = [
-  "#ffffff", // default
+  "#ffffff", // default/white
   "#f28b82", // red
   "#fbbc04", // orange
   "#fff475", // yellow
@@ -31,97 +37,145 @@ const colors = [
   "#cbf0f8", // blue
   "#d7aefb", // purple
   "#fdcfe8", // pink
-  "#8bc34a", // lime green (our primary theme color)
+  "#8bc34a", // lime green (primary theme color)
 ];
+
+// Create custom styled TextField
+const TransparentTextField = styled(TextField)(({ theme, textColor, backgroundColor, isDarkMode }) => ({
+  width: '100%',
+  '& .MuiInputBase-root': {
+    color: textColor,
+    fontFamily: theme.typography.fontFamily,
+    backgroundColor: isDarkMode ? '#1e1e1e !important' : 'transparent',
+  },
+  '& .MuiInputBase-input': {
+    padding: '8px 0',
+    backgroundColor: isDarkMode ? '#1e1e1e !important' : 'transparent',
+  },
+  '& .MuiInput-underline:before, & .MuiInput-underline:after': {
+    display: 'none',
+  },
+  '& textarea, & input': {
+    background: isDarkMode ? '#1e1e1e !important' : 'transparent',
+    backgroundColor: isDarkMode ? '#1e1e1e !important' : 'transparent',
+  }
+}));
 
 function CreateArea(props) {
   const theme = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
   const [colorMenuAnchor, setColorMenuAnchor] = useState(null);
-  const colorMenuOpen = Boolean(colorMenuAnchor);
+  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const titleInputRef = useRef(null);
+  const contentInputRef = useRef(null);
+  
+  // Initialize note state
   const [note, setNote] = useState({
     title: "",
     content: "",
-    color: "#ffffff",
+    color: theme.palette.mode === 'dark' ? "#2d2d2d" : "#ffffff",
     labels: [],
     isPinned: false
   });
   
-  // Adjust colors for dark mode
-  const isDarkMode = theme.palette.mode === 'dark';
-  
-  // Force the default color to dark when in dark mode on component mount or dark mode changes
+  // Force black backgrounds for inputs in dark mode
   useEffect(() => {
-    if (isDarkMode && note.color === "#ffffff") {
-      setNote(prevNote => ({
-        ...prevNote,
-        color: theme.palette.noteBackground
-      }));
-    } else if (!isDarkMode && note.color === theme.palette.noteBackground) {
-      setNote(prevNote => ({
-        ...prevNote,
-        color: "#ffffff"
-      }));
-    }
-  }, [isDarkMode, theme.palette.noteBackground]);
+    // Create a style element to override browser defaults
+    const style = document.createElement('style');
+    const isDarkMode = theme.palette.mode === 'dark';
+    
+    style.innerHTML = isDarkMode 
+      ? `
+        .note-paper textarea, 
+        .note-paper input {
+          background-color: #1e1e1e !important;
+          background: #1e1e1e !important;
+          -webkit-background-fill-color: #1e1e1e !important;
+          box-shadow: none !important;
+        }
+      `
+      : `
+        textarea, input {
+          background-color: transparent !important;
+          -webkit-background-fill-color: transparent !important;
+          box-shadow: none !important;
+        }
+      `;
+    
+    document.head.appendChild(style);
+    
+    // Clean up function
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, [theme.palette.mode]);
   
-  // Get the adjusted background color for the note
-  const getBackgroundColor = (color) => {
-    if (color === "#ffffff" && isDarkMode) {
-      return theme.palette.noteBackground;
-    }
-    return color;
-  };
-  
-  // Get proper text color based on background color
-  const getTextColor = (bgColor) => {
-    // If it's dark mode and using the default color, use the theme text color
-    if (isDarkMode && (bgColor === "#ffffff" || bgColor === theme.palette.noteBackground)) {
-      return theme.palette.text.primary;
+  // Handle direct DOM manipulations when refs are available
+  useEffect(() => {
+    const isDarkMode = theme.palette.mode === 'dark';
+    const bgColor = isDarkMode ? '#1e1e1e' : 'transparent';
+    
+    const applyBg = (elem) => {
+      if (elem) {
+        elem.style.backgroundColor = bgColor;
+        elem.style.background = bgColor;
+        // For WebKit
+        if ('webkitBackgroundFillColor' in elem.style) {
+          elem.style.webkitBackgroundFillColor = bgColor;
+        }
+      }
+    };
+    
+    // Apply to title input
+    if (titleInputRef.current) {
+      const inputElement = titleInputRef.current.querySelector('input');
+      if (inputElement) applyBg(inputElement);
     }
     
-    // For colored notes, determine if we need light or dark text
-    const isLightColor = ["#ffffff", "#a7ffeb", "#cbf0f8", "#ccff90", "#fff475", "#fdcfe8"].includes(bgColor);
-    return isLightColor ? theme.palette.text.primary : theme.palette.getContrastText(bgColor);
-  };
-
+    // Apply to content textarea
+    if (contentInputRef.current) {
+      const textareaElement = contentInputRef.current.querySelector('textarea');
+      if (textareaElement) applyBg(textareaElement);
+    }
+  }, [isExpanded, titleInputRef.current, contentInputRef.current, theme.palette.mode]);
+  
+  // Handle form input changes
   function handleChange(event) {
     const { name, value } = event.target;
-
-    setNote(prevNote => {
-      return {
-        ...prevNote,
-        [name]: value
-      };
-    });
+    setNote(prevNote => ({
+      ...prevNote,
+      [name]: value
+    }));
   }
 
+  // Submit the note
   function submitNote(event) {
+    event.preventDefault();
+    
     if (note.title.trim() === "" && note.content.trim() === "") {
-      return; // Don't add empty notes
+      return; // Don't submit empty notes
     }
     
-    props.onAdd({
-      ...note,
-      color: getBackgroundColor(note.color)
-    });
+    props.onAdd(note);
     
+    // Reset the form
     setNote({
       title: "",
       content: "",
-      color: isDarkMode ? theme.palette.noteBackground : "#ffffff",
+      color: theme.palette.mode === 'dark' ? "#2d2d2d" : "#ffffff",
       labels: [],
       isPinned: false
     });
     
     setIsExpanded(false);
-    event.preventDefault();
   }
 
   function expand() {
     setIsExpanded(true);
   }
 
+  // Color selection functionality
   function handleColorMenuOpen(event) {
     setColorMenuAnchor(event.currentTarget);
     event.stopPropagation();
@@ -139,10 +193,15 @@ function CreateArea(props) {
     handleColorMenuClose();
   }
 
-  // Label functionality
-  const [labelDialogOpen, setLabelDialogOpen] = useState(false);
-  const [newLabel, setNewLabel] = useState("");
+  // Pin functionality
+  function handleTogglePin() {
+    setNote(prevNote => ({
+      ...prevNote,
+      isPinned: !prevNote.isPinned
+    }));
+  }
 
+  // Label functionality
   function handleLabelDialogOpen(event) {
     setLabelDialogOpen(true);
     event.stopPropagation();
@@ -169,126 +228,218 @@ function CreateArea(props) {
       labels: prevNote.labels.filter(label => label !== labelToRemove)
     }));
   }
-
-  // Get the current background color to display
-  const displayBackgroundColor = getBackgroundColor(note.color);
-  const textColor = getTextColor(displayBackgroundColor);
+  
+  // Determine background and text colors based on theme and selected color
+  const isDarkMode = theme.palette.mode === 'dark';
+  let noteBackground = note.color;
+  
+  // Special handling for white in dark mode
+  if (isDarkMode && note.color === "#ffffff") {
+    noteBackground = "#2d2d2d";
+  }
+  
+  // Determine text color based on background
+  const getTextColor = (bgColor) => {
+    // Helper function to determine if color is light
+    const isLightColor = (color) => {
+      // For dark mode's dark background, always use light text
+      if (isDarkMode && color === "#2d2d2d") {
+        return false;
+      }
+      
+      // Convert hex to RGB
+      const hex = color.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      
+      // Calculate brightness (higher value means lighter color)
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 150; // Threshold for determining light vs dark
+    };
+    
+    // Return appropriate text color based on background brightness
+    return isLightColor(bgColor) ? "#212121" : "#ffffff";
+  };
+  
+  const textColor = getTextColor(noteBackground);
+  
+  // Helper function to determine chip colors based on note color
+  const getChipStyle = () => {
+    const isLightNote = getTextColor(noteBackground) === "#212121";
+    
+    return {
+      backgroundColor: isLightNote ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.16)',
+      color: textColor,
+      ".MuiChip-deleteIcon": {
+        color: `${textColor} !important`,
+        opacity: 0.7,
+        "&:hover": {
+          opacity: 1
+        }
+      }
+    };
+  };
 
   return (
-    <ClickAwayListener onClickAway={() => isExpanded && note.title === "" && note.content === "" && setIsExpanded(false)}>
+    <ClickAwayListener 
+      onClickAway={() => {
+        if (isExpanded && note.title.trim() === "" && note.content.trim() === "") {
+          setIsExpanded(false);
+        }
+      }}
+    >
       <Grid container justifyContent="center" sx={{ mt: 2, mb: 4 }}>
         <Grid item xs={12} sm={10} md={8} lg={6}>
           <Paper 
-            elevation={3} 
+            elevation={3}
+            className="note-paper"
             sx={{ 
               p: 2, 
-              backgroundColor: displayBackgroundColor,
+              backgroundColor: noteBackground,
               color: textColor,
               borderRadius: 2,
-              transition: "all 0.3s ease",
+              transition: "all 0.2s ease",
               "&:hover": {
                 boxShadow: theme.shadows[6]
               }
             }}
           >
-            <form className="create-note" onSubmit={submitNote}>
+            <form 
+              onSubmit={submitNote} 
+              className={isDarkMode ? "dark-mode-form" : ""}
+              style={{
+                backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+                background: isDarkMode ? '#1e1e1e' : '#ffffff',
+              }}
+            >
               {isExpanded && (
-                <TextField
-                  name="title"
-                  placeholder="Title"
-                  value={note.title}
-                  onChange={handleChange}
-                  fullWidth
-                  variant="standard"
-                  InputProps={{
-                    disableUnderline: true,
-                    style: { color: textColor }
-                  }}
-                  sx={{ 
-                    mb: 1,
-                    "& .MuiInputBase-input": { 
-                      color: textColor,
-                      fontSize: "1.2rem"
-                    },
-                    "& .MuiInputBase-input::placeholder": {
-                      color: textColor ? `${textColor}99` : undefined,
-                      opacity: 1
-                    }
-                  }}
-                />
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <Box 
+                    sx={{ 
+                      flex: 1,
+                      position: 'relative'
+                    }}
+                  >
+                    <TransparentTextField
+                      ref={titleInputRef}
+                      name="title"
+                      value={note.title}
+                      onChange={handleChange}
+                      placeholder="Title"
+                      variant="standard"
+                      fullWidth
+                      InputProps={{
+                        style: {
+                          fontSize: '1.2rem',
+                          fontWeight: '500',
+                          background: isDarkMode ? '#1e1e1e' : 'transparent',
+                          backgroundColor: isDarkMode ? '#1e1e1e' : 'transparent',
+                        },
+                        disableUnderline: true,
+                      }}
+                      textColor={textColor}
+                      backgroundColor={noteBackground}
+                      isDarkMode={isDarkMode}
+                    />
+                  </Box>
+                  <Tooltip title={note.isPinned ? "Unpin note" : "Pin note"}>
+                    <IconButton 
+                      size="small" 
+                      onClick={handleTogglePin}
+                      sx={{ color: textColor }}
+                    >
+                      {note.isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               )}
-              <TextField
-                name="content"
-                placeholder="Take a note..."
-                value={note.content}
-                onChange={handleChange}
-                onClick={expand}
-                multiline
-                rows={isExpanded ? 3 : 1}
-                fullWidth
-                variant="standard"
-                InputProps={{
-                  disableUnderline: true,
-                  style: { color: textColor }
+              
+              {isExpanded && (
+                <Divider sx={{ 
+                  my: 1, 
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)' 
+                }} />
+              )}
+              
+              <Box 
+                sx={{ 
+                  width: '100%',
+                  position: 'relative'
                 }}
-                sx={{
-                  "& .MuiInputBase-input": { 
-                    color: textColor 
-                  },
-                  "& .MuiInputBase-input::placeholder": {
-                    color: textColor ? `${textColor}99` : undefined,
-                    opacity: 1
-                  }
-                }}
-              />
-              <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-                <Box>
+              >
+                <TransparentTextField
+                  ref={contentInputRef}
+                  name="content"
+                  value={note.content}
+                  onChange={handleChange}
+                  onClick={expand}
+                  placeholder="Take a note..."
+                  multiline
+                  rows={isExpanded ? 3 : 1}
+                  variant="standard"
+                  fullWidth
+                  InputProps={{
+                    style: {
+                      background: isDarkMode ? '#1e1e1e' : 'transparent',
+                      backgroundColor: isDarkMode ? '#1e1e1e' : 'transparent',
+                    },
+                    disableUnderline: true,
+                  }}
+                  textColor={textColor}
+                  backgroundColor={noteBackground}
+                  isDarkMode={isDarkMode}
+                />
+              </Box>
+              
+              {note.labels.length > 0 && (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 2 }}>
+                  {note.labels.map((label, index) => (
+                    <Chip 
+                      key={index} 
+                      label={label} 
+                      size="small" 
+                      onDelete={() => handleRemoveLabel(label)}
+                      sx={getChipStyle()}
+                    />
+                  ))}
+                </Box>
+              )}
+              
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2 }}>
+                <Box sx={{ display: "flex", gap: 1 }}>
                   {isExpanded && (
-                    <Tooltip title="Change color">
-                      <IconButton
-                        size="small"
-                        onClick={handleColorMenuOpen}
-                        aria-label="change note color"
-                        aria-controls={colorMenuOpen ? "color-menu" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={colorMenuOpen ? "true" : undefined}
-                        sx={{ color: textColor }}
-                      >
-                        <ColorLensOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {isExpanded && (
-                    <Tooltip title="Add label">
-                      <IconButton
-                        size="small"
-                        onClick={handleLabelDialogOpen}
-                        aria-label="add label"
-                        sx={{ color: textColor }}
-                      >
-                        <LabelOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    <>
+                      <Tooltip title="Change color">
+                        <IconButton
+                          size="small"
+                          onClick={handleColorMenuOpen}
+                          aria-label="change note color"
+                          sx={{ 
+                            color: textColor,
+                            padding: 1,
+                          }}
+                        >
+                          <ColorLensOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Add label">
+                        <IconButton
+                          size="small"
+                          onClick={handleLabelDialogOpen}
+                          aria-label="add label"
+                          sx={{ 
+                            color: textColor,
+                            padding: 1,
+                          }}
+                        >
+                          <LabelOutlinedIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </>
                   )}
                 </Box>
-                {isExpanded && note.labels.length > 0 && (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1, mb: 1 }}>
-                    {note.labels.map((label, index) => (
-                      <Chip 
-                        key={index} 
-                        label={label} 
-                        size="small" 
-                        onDelete={() => handleRemoveLabel(label)}
-                        sx={{
-                          backgroundColor: isDarkMode 
-                            ? 'rgba(255, 255, 255, 0.1)' 
-                            : 'rgba(0, 0, 0, 0.08)',
-                          color: textColor
-                        }}
-                      />
-                    ))}
-                  </Box>
-                )}
+                
                 <Zoom in={isExpanded}>
                   <Tooltip title="Add Note">
                     <IconButton 
@@ -296,7 +447,7 @@ function CreateArea(props) {
                       color="primary"
                       sx={{ 
                         backgroundColor: theme.palette.primary.main,
-                        color: 'white',
+                        color: '#ffffff',
                         '&:hover': {
                           backgroundColor: theme.palette.primary.dark,
                         }
@@ -314,7 +465,7 @@ function CreateArea(props) {
           <Menu
             id="color-menu"
             anchorEl={colorMenuAnchor}
-            open={colorMenuOpen}
+            open={Boolean(colorMenuAnchor)}
             onClose={handleColorMenuClose}
             PaperProps={{
               sx: {
@@ -323,34 +474,41 @@ function CreateArea(props) {
               }
             }}
           >
-            <Box sx={{ display: "flex", flexWrap: "wrap", width: 136, p: 0.5 }}>
-              {colors.map((colorOption, index) => (
-                <Box
-                  key={index}
-                  onClick={() => handleColorSelect(colorOption)}
-                  sx={{
-                    width: 30,
-                    height: 30,
-                    m: 0.5,
-                    border: "1px solid #e0e0e0",
-                    borderRadius: "50%",
-                    backgroundColor: isDarkMode && colorOption === "#ffffff" 
-                      ? theme.palette.noteBackground 
-                      : colorOption,
-                    cursor: "pointer",
-                    "&:hover": {
-                      border: `2px solid ${theme.palette.primary.main}`,
-                    },
-                    ...(note.color === colorOption && {
-                      border: `2px solid ${theme.palette.primary.main}`,
-                    }),
-                  }}
-                />
-              ))}
+            <Box sx={{ display: "flex", flexWrap: "wrap", width: 180, p: 0.5 }}>
+              {colors.map((colorOption, index) => {
+                // Adjust colors for dark mode
+                let displayColor = colorOption;
+                if (isDarkMode && colorOption === "#ffffff") {
+                  displayColor = "#2d2d2d";
+                }
+                
+                return (
+                  <Box
+                    key={index}
+                    onClick={() => handleColorSelect(colorOption)}
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      m: 0.5,
+                      border: "1px solid",
+                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.23)' : 'rgba(0, 0, 0, 0.23)',
+                      borderRadius: "50%",
+                      backgroundColor: displayColor,
+                      cursor: "pointer",
+                      "&:hover": {
+                        border: `2px solid ${theme.palette.primary.main}`,
+                      },
+                      ...(note.color === colorOption && {
+                        border: `2px solid ${theme.palette.primary.main}`,
+                      }),
+                    }}
+                  />
+                );
+              })}
             </Box>
           </Menu>
-
-          {/* Label dialog */}
+          
+          {/* Label Dialog */}
           <Dialog 
             open={labelDialogOpen} 
             onClose={handleLabelDialogClose}
@@ -367,7 +525,7 @@ function CreateArea(props) {
                 autoFocus
                 margin="dense"
                 id="label"
-                label="Label"
+                label="New Label"
                 type="text"
                 fullWidth
                 variant="outlined"
@@ -378,10 +536,15 @@ function CreateArea(props) {
                     handleAddLabel();
                   }
                 }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: theme.palette.text.primary,
+                  }
+                }}
               />
               {note.labels.length > 0 && (
                 <Box sx={{ mt: 2 }}>
-                  <Box sx={{ mb: 1 }}>Current Labels:</Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>Current Labels:</Typography>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                     {note.labels.map((label, index) => (
                       <Chip 
@@ -389,6 +552,10 @@ function CreateArea(props) {
                         label={label} 
                         size="small" 
                         onDelete={() => handleRemoveLabel(label)}
+                        sx={{
+                          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                          color: theme.palette.text.primary
+                        }}
                       />
                     ))}
                   </Box>
@@ -406,4 +573,4 @@ function CreateArea(props) {
   );
 }
 
-export default CreateArea; 
+export default CreateArea;

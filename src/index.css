@@ -1,0 +1,204 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Global styles for custom input elements */
+.note-input,
+input.note-input,
+textarea.note-input {
+  background-color: transparent !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  width: 100% !important;
+  color: inherit !important;
+  font-family: inherit !important;
+}
+
+/* Override white box container in dark mode */
+.MuiPaper-root {
+  transition: background-color 0.3s ease !important;
+}
+
+/* Target specific white containers */
+.MuiInputBase-root,
+.MuiInput-root,
+.MuiFilledInput-root,
+.MuiTextField-root > div,
+.MuiOutlinedInput-root {
+  background-color: inherit !important;
+}
+
+/* Ensure any child divs of our custom inputs inherit background colors */
+.note-input-container,
+.note-input-container > div,
+.note-input-container > div > div {
+  background-color: inherit !important;
+}
+
+/* Override autofill styles which can be problematic in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: background-color 5000s ease-in-out 0s;
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* Default scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode scrollbar */
+.dark-theme::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-theme::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Fix for white box issue in notes */
+.dark-theme .MuiPaper-root {
+  background-color: inherit !important;
+}
+
+/* Fix form background in dark mode */
+body.dark-mode form {
+  background-color: #1e1e1e !important;
+  background: #1e1e1e !important;
+}
+
+form .MuiInputBase-root {
+  background-color: inherit !important;
+}
+
+/* Fix input backgrounds in form in dark mode */
+body.dark-mode form input,
+body.dark-mode form textarea,
+body.dark-mode .MuiPaper-root textarea,
+body.dark-mode .MuiPaper-root input,
+body.dark-mode .MuiInputBase-input,
+body.dark-mode .note-paper textarea,
+body.dark-mode .note-paper input {
+  background-color: #1e1e1e !important;
+  color: #ffffff;
+}
+
+/* Fix specific white input boxs issue */
+.dark-theme input, 
+.dark-theme textarea,
+.dark-theme .MuiInputBase-input,
+.dark-theme .MuiOutlinedInput-input {
+  background-color: transparent !important;
+}
+
+/* Fix for white container issue in dark mode */
+.dark-theme .MuiInputBase-root {
+  background-color: transparent !important;
+}
+
+.dark-theme .MuiInputBase-root::before,
+.dark-theme .MuiInputBase-root::after {
+  display: none !important;
+}
+
+/* Target any white boxes surrounding inputs */
+.dark-theme form > div,
+.dark-theme .MuiInputBase-root > div {
+  background-color: transparent !important;
+}
+
+/* Exclude search bar from dark mode styling */
+.MuiAppBar-root .MuiInputBase-root,
+.MuiAppBar-root .MuiInputBase-input {
+  background-color: transparent !important;
+}
+
+body.dark-mode .MuiAppBar-root .MuiInputBase-root,
+body.dark-mode .MuiAppBar-root .MuiInputBase-input {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+/* Force AppBar to keep light mode appearance even in dark mode */
+.MuiAppBar-root {
+  background-color: #8bc34a !important; /* Lime green */
+  color: white !important;
+}
+
+/* Make sure search bar stays consistent */
+.MuiAppBar-root .MuiInputBase-root,
+.MuiAppBar-root .MuiInputBase-input {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+/* ===== HEADER SPECIFIC STYLING - ALWAYS LIGHT MODE ===== */
+/* Force search bar to have light styling in both modes */
+.MuiAppBar-root .MuiInputBase-root,
+.MuiAppBar-root input,
+.MuiAppBar-root [role="searchbox"] {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+/* This targets the search bar specifically */
+.MuiToolbar-root [role="search"],
+.MuiToolbar-root [role="search"] > div,
+.MuiToolbar-root [role="search"] input {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+/* Override any dark mode specific styling for the header */
+body.dark-mode .MuiAppBar-root,
+.dark-theme .MuiAppBar-root {
+  background-color: #8bc34a !important;
+}
+
+body.dark-mode .MuiAppBar-root *:not(svg):not(path),
+.dark-theme .MuiAppBar-root *:not(svg):not(path) {
+  background-color: transparent;
+}
+
+body.dark-mode .MuiAppBar-root .MuiInputBase-root,
+body.dark-mode .MuiAppBar-root input {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+/* Extra specificity for search input in dark mode */
+body.dark-mode .MuiAppBar-root .MuiInputBase-root .MuiInputBase-input,
+.dark-theme .MuiAppBar-root .MuiInputBase-root .MuiInputBase-input {
+  background-color: transparent !important;
+  -webkit-background-fill-color: transparent !important;
+} 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -39,7 +39,7 @@ const colors = [
 function Note(props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [isPinned, setIsPinned] = useState(false);
+  const [isPinned, setIsPinned] = useState(props.isPinned || false);
   const [color, setColor] = useState(props.color || "#ffffff");
   const [colorMenuAnchor, setColorMenuAnchor] = useState(null);
   const colorMenuOpen = Boolean(colorMenuAnchor);
@@ -47,6 +47,13 @@ function Note(props) {
   const [labelDialogOpen, setLabelDialogOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
+  // Update local state when props change
+  useEffect(() => {
+    setIsPinned(props.isPinned || false);
+    setColor(props.color || "#ffffff");
+    setLabels(props.labels || []);
+  }, [props.isPinned, props.color, props.labels]);
   
   // Adjust colors for dark mode
   const isDarkMode = props.darkMode;
@@ -79,9 +86,10 @@ function Note(props) {
   }
 
   function handlePinClick() {
-    setIsPinned(!isPinned);
+    const newPinStatus = !isPinned;
+    setIsPinned(newPinStatus);
     if (props.onPin) {
-      props.onPin(props.id, !isPinned);
+      props.onPin(props.id, newPinStatus);
     }
   }
 
@@ -102,6 +110,10 @@ function Note(props) {
   function handleColorSelect(selectedColor) {
     setColor(selectedColor);
     handleColorMenuClose();
+    // Call the color change handler from props
+    if (props.onColorChange) {
+      props.onColorChange(props.id, selectedColor);
+    }
   }
 
   function handleLabelDialogOpen() {

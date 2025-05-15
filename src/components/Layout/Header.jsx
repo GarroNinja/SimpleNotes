@@ -24,12 +24,15 @@ import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 
+// Define the lime green color used in AppBar
+const limeGreenColor = '#8bc34a';
+
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  backgroundColor: 'rgba(255, 255, 255, 0.15)',  // Always use light mode style
   "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
+    backgroundColor: 'rgba(255, 255, 255, 0.25)', // Always use light mode style
   },
   marginRight: theme.spacing(2),
   marginLeft: 0,
@@ -48,16 +51,19 @@ const SearchIconWrapper = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  color: "white", // Force white color
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: "inherit",
+  color: "white", // Always white text
   width: "100%",
   "& .MuiInputBase-input": {
     padding: theme.spacing(1, 1, 1, 0),
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create("width"),
     width: "100%",
+    backgroundColor: "transparent !important", // Force transparent background
+    color: "white !important", // Force white text
     [theme.breakpoints.up("md")]: {
       width: "20ch",
     },
@@ -129,7 +135,8 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
         position="static" 
         elevation={4}
         sx={{ 
-          backgroundColor: theme.palette.primary.main,
+          backgroundColor: limeGreenColor, // Always use light theme color
+          color: "#ffffff" // Keep text white
         }}
       >
         <Toolbar>
@@ -150,7 +157,14 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
           <Typography variant="h6" noWrap component="div" sx={{ display: { xs: "none", sm: "block" } }}>
             SimpleNotes
           </Typography>
-          <Search sx={{ flexGrow: 1, maxWidth: { xs: '100%', sm: 400 } }}>
+          <Search sx={{ 
+            flexGrow: 1, 
+            maxWidth: { xs: '100%', sm: 400 },
+            backgroundColor: alpha("#ffffff", 0.15), // Always use light theme style
+            "&:hover": {
+              backgroundColor: alpha("#ffffff", 0.25), // Always use light theme style
+            },
+          }}>
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
@@ -158,6 +172,7 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
               placeholder="Search…"
               inputProps={{ "aria-label": "search" }}
               onChange={(e) => onSearch && onSearch(e.target.value)}
+              sx={{ color: "#ffffff" }} // Always keep text white
             />
           </Search>
           <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: 2 }}>

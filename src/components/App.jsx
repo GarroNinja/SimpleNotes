@@ -231,6 +231,30 @@ function App() {
     }
   }
 
+  async function handleColorChange(id, selectedColor) {
+    try {
+      // Find the note to update
+      const noteToUpdate = notes.find(note => note.id === id);
+      if (!noteToUpdate) return;
+      
+      // Update the note with the new color
+      const updatedNote = await notesApi.updateNote(id, {
+        ...noteToUpdate,
+        color: selectedColor
+      });
+      
+      // Update the notes state
+      setNotes(prevNotes => 
+        prevNotes.map(note => note.id === id ? updatedNote : note)
+      );
+
+      showNotification('Note color updated successfully', 'success');
+    } catch (err) {
+      console.error('Error updating note color:', err);
+      showNotification('Failed to update note color', 'error');
+    }
+  }
+
   async function handleArchivedLabelChange(id, updatedLabels) {
     try {
       // Find the archived note to update
@@ -250,6 +274,30 @@ function App() {
     } catch (err) {
       console.error('Error updating labels on archived note:', err);
       showNotification('Failed to update labels on archived note', 'error');
+    }
+  }
+
+  async function handleArchivedColorChange(id, selectedColor) {
+    try {
+      // Find the archived note to update
+      const noteToUpdate = archivedNotes.find(note => note.id === id);
+      if (!noteToUpdate) return;
+      
+      // Update the note with the new color
+      const updatedNote = await notesApi.updateNote(id, {
+        ...noteToUpdate,
+        color: selectedColor
+      });
+      
+      // Update the archived notes state
+      setArchivedNotes(prevNotes => 
+        prevNotes.map(note => note.id === id ? updatedNote : note)
+      );
+      
+      showNotification('Note color updated successfully', 'success');
+    } catch (err) {
+      console.error('Error updating archived note color:', err);
+      showNotification('Failed to update note color', 'error');
     }
   }
 
@@ -278,68 +326,72 @@ function App() {
       note.content.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Create theme
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? 'dark' : 'light',
-      primary: {
-        main: limeGreenTheme[darkMode ? 'dark' : 'light'].primary,
-      },
-      secondary: {
-        main: limeGreenTheme[darkMode ? 'dark' : 'light'].secondary,
-      },
-      background: {
-        default: limeGreenTheme[darkMode ? 'dark' : 'light'].background,
-        paper: limeGreenTheme[darkMode ? 'dark' : 'light'].paper,
-      },
-      text: {
-        primary: limeGreenTheme[darkMode ? 'dark' : 'light'].text,
-      },
-      noteBackground: limeGreenTheme[darkMode ? 'dark' : 'light'].noteBackground,
-    },
-    components: {
-      MuiAppBar: {
-        styleOverrides: {
-          root: {
-            backgroundColor: limeGreenTheme[darkMode ? 'dark' : 'light'].primary,
+  // Create the theme based on the current dark mode state
+  const theme = React.useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: darkMode ? 'dark' : 'light',
+          primary: {
+            main: limeGreenTheme[darkMode ? 'dark' : 'light'].primary,
+          },
+          secondary: {
+            main: limeGreenTheme[darkMode ? 'dark' : 'light'].secondary,
+          },
+          background: {
+            default: limeGreenTheme[darkMode ? 'dark' : 'light'].background,
+            paper: limeGreenTheme[darkMode ? 'dark' : 'light'].paper,
+          },
+          text: {
+            primary: limeGreenTheme[darkMode ? 'dark' : 'light'].text,
           },
         },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            transition: 'background-color 0.3s, box-shadow 0.3s',
+        components: {
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
+              },
+            },
+          },
+          MuiInputBase: {
+            styleOverrides: {
+              root: {
+                backgroundColor: darkMode ? '#1e1e1e !important' : 'transparent',
+                '& input, & textarea': {
+                  backgroundColor: darkMode ? '#1e1e1e !important' : 'transparent',
+                }
+              },
+            },
+          },
+          // Keep AppBar always in light mode
+          MuiAppBar: {
+            styleOverrides: {
+              root: {
+                backgroundColor: limeGreenTheme.light.primary + ' !important',
+                color: '#ffffff !important',
+              },
+            },
+          },
+          // Special styling for the search bar
+          MuiToolbar: {
+            styleOverrides: {
+              root: {
+                '& .MuiInputBase-root': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.15) !important',
+                  color: 'white !important',
+                  '& input': {
+                    backgroundColor: 'transparent !important',
+                    color: 'white !important',
+                  }
+                }
+              },
+            },
           },
         },
-      },
-      MuiCssBaseline: {
-        styleOverrides: {
-          body: {
-            transition: 'background-color 0.3s, color 0.3s',
-            backgroundColor: limeGreenTheme[darkMode ? 'dark' : 'light'].background,
-            color: limeGreenTheme[darkMode ? 'dark' : 'light'].text,
-          },
-        },
-      },
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            transition: 'background-color 0.3s, color 0.3s',
-          },
-        },
-      },
-      MuiDrawer: {
-        styleOverrides: {
-          paper: {
-            backgroundColor: limeGreenTheme[darkMode ? 'dark' : 'light'].paper,
-          },
-        },
-      },
-    },
-    typography: {
-      fontFamily: '"McLaren", cursive',
-    },
-  });
+      }),
+    [darkMode],
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -413,6 +465,7 @@ function App() {
                       onPin={handlePin}
                       onArchive={handleArchive}
                       onLabelChange={handleLabelChange}
+                      onColorChange={handleColorChange}
                       darkMode={darkMode}
                     />
                   </Grid>
@@ -445,8 +498,10 @@ function App() {
                     labels={noteItem.labels}
                     isPinned={noteItem.is_pinned}
                     onDelete={deleteArchivedNote}
-                    onArchive={() => handleUnarchive(noteItem.id)}
+                    onPin={handlePin}
+                    onArchive={handleUnarchive}
                     onLabelChange={handleArchivedLabelChange}
+                    onColorChange={handleArchivedColorChange}
                     darkMode={darkMode}
                   />
                 </Grid>
