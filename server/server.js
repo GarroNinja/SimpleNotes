@@ -26,12 +26,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Test database connection
+// Test database connection - using Supabase connection pooling
 pool.connect()
-  .then(() => console.log('Connected to PostgreSQL database'))
+  .then(() => console.log('Connected to PostgreSQL database via Supabase connection pooling'))
   .catch(err => {
     console.error('Database connection error:', err.stack);
-    console.error('Please check your DATABASE_URL environment variable is correct in Vercel settings');
+    console.error('Please check your DATABASE_URL environment variable is pointing to the Supabase pooler URL');
   });
 
 // Routes
