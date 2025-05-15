@@ -4,8 +4,16 @@ const { pool, PORT } = require('./config');
 
 const app = express();
 
+// CORS configuration - allow any origin for maximum compatibility
+const corsOptions = {
+  origin: '*', // Allow any origin to connect
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Test database connection

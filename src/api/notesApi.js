@@ -1,5 +1,8 @@
 // API service for communicating with the backend
 
+// Check if we're in a production environment
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Detect mobile device
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
   typeof navigator !== 'undefined' ? navigator.userAgent : ''
@@ -7,23 +10,27 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 
 // Determine the base URL
 const determineBaseUrl = () => {
-  // If an environment variable is set, use that
+  // First priority: Always use environment variable if set
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
   
-  // Different URLs for mobile vs desktop
-  // Note: Mobile devices might need the actual IP or accessible hostname
-  // instead of localhost which only works on the device itself
+  // Second priority: In production with no env var, rely on relative API path
+  // This assumes API is hosted on the same domain or properly configured in Vercel
+  if (isProduction) {
+    return '/api';
+  }
+  
+  // Third priority: In development with no env var, use localhost or local IP
   return isMobile 
     ? 'http://192.168.68.110:5001/api'  // Local network IP for real mobile devices
-    : 'http://localhost:5001/api'; // This works for desktop browsers
+    : 'http://localhost:5001/api';      // Local development on desktop
 };
 
 const API_BASE_URL = determineBaseUrl();
 
 // Log which API endpoint we're using - helps with debugging
-console.log(`Using API endpoint: ${API_BASE_URL}, Mobile: ${isMobile}`);
+console.log(`Using API endpoint: ${API_BASE_URL}, Mobile: ${isMobile}, Production: ${isProduction}`);
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {
