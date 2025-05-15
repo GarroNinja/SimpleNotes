@@ -16,10 +16,23 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Global error handler middleware
+app.use((err, req, res, next) => {
+  console.error('Global error handler caught:', err);
+  res.status(500).json({
+    error: 'An unexpected server error occurred',
+    message: err.message,
+    path: req.path
+  });
+});
+
 // Test database connection
 pool.connect()
   .then(() => console.log('Connected to PostgreSQL database'))
-  .catch(err => console.error('Database connection error:', err.stack));
+  .catch(err => {
+    console.error('Database connection error:', err.stack);
+    console.error('Please check your DATABASE_URL environment variable is correct in Vercel settings');
+  });
 
 // Routes
 
@@ -30,7 +43,11 @@ app.get('/api/notes', async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching notes:', err);
-    res.status(500).json({ error: 'An error occurred while fetching notes' });
+    res.status(500).json({ 
+      error: 'An error occurred while fetching notes',
+      details: err.message,
+      hint: 'Verify DATABASE_URL is correctly set in Vercel environment variables'
+    });
   }
 });
 
@@ -147,10 +164,28 @@ app.patch('/api/notes/:id/pin', async (req, res) => {
 
 // Simple health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date() });
+  // Test database connection with this health check
+  pool.query('SELECT NOW()')
+    .then(result => {
+      res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date(),
+        database: 'connected',
+        dbTime: result.rows[0].now
+      });
+    })
+    .catch(err => {
+      res.status(500).json({
+        status: 'ERROR',
+        timestamp: new Date(),
+        database: 'disconnected',
+        error: err.message
+      });
+    });
 });
 
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Health check available at http://localhost:${PORT}/health`);
 });
