@@ -144,47 +144,68 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'flex-start', sm: 'center' },
+            alignItems: { xs: 'stretch', sm: 'center' },
             justifyContent: { xs: 'flex-start', sm: 'space-between' },
             width: '100%',
-            minHeight: { xs: 56, sm: 64 },
+            minHeight: { xs: 'auto', sm: 64 },
             px: { xs: 1, sm: 3 },
             py: { xs: 1, sm: 0 },
             gap: { xs: 1, sm: 0 },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', width: { xs: '100%', sm: 'auto' } }}>
-            {isMobile && (
-              <IconButton
-                edge="start"
-                color="inherit"
-                aria-label="menu"
-                onClick={handleDrawerToggle}
-                sx={{ mr: 1 }}
-              >
-                <MenuIcon />
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            width: '100%',
+            justifyContent: 'space-between'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {isMobile && (
+                <IconButton
+                  edge="start"
+                  color="inherit"
+                  aria-label="menu"
+                  onClick={handleDrawerToggle}
+                  sx={{ mr: 1 }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
+              <IconButton edge="start" color="inherit" aria-label="logo" sx={{ mr: 1 }}>
+                <LightbulbOutlinedIcon fontSize={isMobile ? 'small' : 'large'} />
               </IconButton>
-            )}
-            <IconButton edge="start" color="inherit" aria-label="logo" sx={{ mr: 1 }}>
-              <LightbulbOutlinedIcon fontSize={isMobile ? 'medium' : 'large'} />
+              <Typography 
+                variant={isMobile ? 'subtitle1' : 'h6'} 
+                noWrap 
+                component="div" 
+                sx={{
+                  display: 'block',
+                  fontWeight: 600,
+                  fontSize: isMobile ? '1rem' : '1.25rem',
+                  flexGrow: 0,
+                  ml: 0.5
+                }}
+              >
+                SimpleNotes
+              </Typography>
+            </Box>
+            {/* Dark mode toggle - always in first row */}
+            <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: { xs: 0, sm: 2 } }}>
+              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
-            <Typography 
-              variant={isMobile ? 'subtitle1' : 'h6'} 
-              noWrap 
-              component="div" 
-              sx={{
-                display: 'block',
-                fontWeight: 600,
-                fontSize: isMobile ? '1.1rem' : '1.25rem',
-                flexGrow: 0,
-                ml: 0.5
-              }}
-            >
-              SimpleNotes
-            </Typography>
           </Box>
-          <Box sx={{ width: { xs: '100%', sm: 'auto' }, mt: { xs: 1, sm: 0 }, flexGrow: { xs: 1, sm: 0 } }}>
-            <Search sx={{ width: { xs: '100%', sm: 400 } }}>
+          
+          {/* Search bar - always in second row on mobile, inline on desktop */}
+          <Box sx={{ 
+            width: '100%', 
+            mt: { xs: 0.5, sm: 0 }, 
+            flexGrow: { xs: 1, sm: 0 },
+            display: { xs: 'block', sm: 'inline-flex' }
+          }}>
+            <Search sx={{ 
+              width: '100%',
+              maxWidth: { sm: 400 }
+            }}>
               <SearchIconWrapper>
                 <SearchIcon />
               </SearchIconWrapper>
@@ -196,9 +217,6 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
               />
             </Search>
           </Box>
-          <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: { xs: 0, sm: 2 }, mt: { xs: 1, sm: 0 } }}>
-            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-          </IconButton>
         </Toolbar>
       </AppBar>
       <Drawer

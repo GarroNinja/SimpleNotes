@@ -12,10 +12,45 @@ const handleResponse = async (response) => {
   return data;
 };
 
+// Custom fetch with timeout and retry
+const fetchWithTimeout = async (url, options = {}, timeout = 10000, retries = 2) => {
+  const controller = new AbortController();
+  const { signal } = controller;
+  
+  // Add abort signal to options
+  const fetchOptions = {
+    ...options,
+    signal,
+  };
+  
+  // Set timeout
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, fetchOptions);
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - server took too long to respond');
+    }
+    
+    // If there are retries left and it's a network error (likely mobile connectivity issue)
+    if (retries > 0 && (error.message.includes('fetch') || error.message.includes('network'))) {
+      console.log(`Retrying request to ${url}, ${retries} retries left`);
+      return fetchWithTimeout(url, options, timeout, retries - 1);
+    }
+    
+    throw error;
+  }
+};
+
 // Get all non-archived notes
 export const fetchNotes = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes`);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes`);
     return handleResponse(response);
   } catch (error) {
     console.error('Error fetching notes:', error);
@@ -26,7 +61,7 @@ export const fetchNotes = async () => {
 // Get all archived notes
 export const fetchArchivedNotes = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes/archived`);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes/archived`);
     return handleResponse(response);
   } catch (error) {
     console.error('Error fetching archived notes:', error);
@@ -37,7 +72,7 @@ export const fetchArchivedNotes = async () => {
 // Create a new note
 export const createNote = async (noteData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,7 +89,7 @@ export const createNote = async (noteData) => {
 // Update an existing note
 export const updateNote = async (id, noteData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +106,7 @@ export const updateNote = async (id, noteData) => {
 // Delete a note
 export const deleteNote = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes/${id}`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes/${id}`, {
       method: 'DELETE',
     });
     return handleResponse(response);
@@ -84,7 +119,7 @@ export const deleteNote = async (id) => {
 // Archive or unarchive a note
 export const toggleArchiveStatus = async (id, archived) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes/${id}/archive`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes/${id}/archive`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -101,7 +136,7 @@ export const toggleArchiveStatus = async (id, archived) => {
 // Toggle pin status
 export const togglePinStatus = async (id, isPinned) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/notes/${id}/pin`, {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/notes/${id}/pin`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

@@ -127,7 +127,7 @@ function App() {
             hasChanges = true;
           } catch (err) {
             console.error('Error updating note color:', err);
-          }
+    }
         }
       }
       // Update state only if changes were made
@@ -242,20 +242,20 @@ function App() {
     try {
       const updatedNote = await notesApi.togglePinStatus(id, isPinned);
       
-      setNotes(prevNotes => {
+    setNotes(prevNotes => {
         // Remove the updated note from the list
         const filteredNotes = prevNotes.filter(note => note.id !== id);
         
         // Add the updated note at the beginning if pinned, or after all pinned notes if unpinned
-        if (isPinned) {
+      if (isPinned) {
           return [updatedNote, ...filteredNotes];
-        } else {
+      } else {
           // Find the position after the last pinned note
           const lastPinnedIndex = filteredNotes.findIndex(note => !note.is_pinned);
-          if (lastPinnedIndex === -1) {
+        if (lastPinnedIndex === -1) {
             return [...filteredNotes, updatedNote];
-          }
-          // Insert after the last pinned note
+        }
+        // Insert after the last pinned note
           const result = [...filteredNotes];
           result.splice(lastPinnedIndex, 0, updatedNote);
           return result;
@@ -264,7 +264,7 @@ function App() {
     } catch (err) {
       console.error('Error updating pin status:', err);
       showNotification('Failed to update pin status', 'error');
-    }
+      }
   }
 
   async function handleArchive(id) {
@@ -344,7 +344,7 @@ function App() {
     } catch (err) {
       console.error('Error updating note color:', err);
       showNotification('Failed to update note color', 'error');
-    }
+  }
   }
 
   async function handleArchivedLabelChange(id, updatedLabels) {
@@ -366,7 +366,7 @@ function App() {
     } catch (err) {
       console.error('Error updating labels on archived note:', err);
       showNotification('Failed to update labels on archived note', 'error');
-    }
+  }
   }
 
   async function handleArchivedColorChange(id, selectedColor) {
@@ -422,15 +422,15 @@ function App() {
   const theme = React.useMemo(
     () =>
       createTheme({
-        palette: {
-          mode: darkMode ? 'dark' : 'light',
-          primary: {
+    palette: {
+      mode: darkMode ? 'dark' : 'light',
+      primary: {
             main: limeGreenTheme[darkMode ? 'dark' : 'light'].primary,
           },
           secondary: {
             main: limeGreenTheme[darkMode ? 'dark' : 'light'].secondary,
-          },
-          background: {
+      },
+      background: {
             default: limeGreenTheme[darkMode ? 'dark' : 'light'].background,
             paper: limeGreenTheme[darkMode ? 'dark' : 'light'].paper,
           },
@@ -443,8 +443,8 @@ function App() {
             styleOverrides: {
               root: {
                 backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
-              },
-            },
+      },
+    },
           },
           MuiInputBase: {
             styleOverrides: {
@@ -480,7 +480,7 @@ function App() {
               },
             },
           },
-        },
+    },
       }),
     [darkMode],
   );
