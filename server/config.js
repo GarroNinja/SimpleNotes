@@ -19,5 +19,5 @@ const pool = new Pool(poolConfig);
 
 module.exports = {
   pool,
-  PORT: process.env.PORT || 5000
+  PORT: process.env.PORT || 5001
 }; 

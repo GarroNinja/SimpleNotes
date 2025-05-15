@@ -10,7 +10,8 @@ import {
   useMediaQuery,
   Snackbar,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Button
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Header from "./Layout/Header";
@@ -184,7 +185,16 @@ function App() {
         setError(null);
       } catch (err) {
         console.error('Error fetching notes:', err);
-        setError('Failed to load notes. Please try again later.');
+        
+        // More user-friendly message for common mobile errors
+        if (err.message && err.message.includes('timeout')) {
+          setError('Connection took too long. Please check your internet connection and retry.');
+        } else if (err.message && err.message.includes('fetch')) {
+          setError('Network error. Please make sure you have a working internet connection and try again.');
+        } else {
+          setError('Failed to load notes. Please try again later.');
+        }
+        
         showNotification('Failed to load notes from server', 'error');
       } finally {
         setLoading(false);
@@ -485,6 +495,15 @@ function App() {
     [darkMode],
   );
 
+  // Function to retry note fetching after a failure
+  const handleRetryFetch = () => {
+    setError(null);
+    setLoading(true);
+    // Re-trigger effect by changing a state the effect depends on
+    setDarkMode(prevMode => !prevMode);
+    setTimeout(() => setDarkMode(prevMode => !prevMode), 100);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -529,6 +548,8 @@ function App() {
           {error && !loading && (
             <Box sx={{ 
               display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center',
               justifyContent: 'center', 
               my: 4, 
               p: 3, 
@@ -537,6 +558,14 @@ function App() {
               color: theme.palette.error.contrastText
             }}>
               <p>{error}</p>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={handleRetryFetch}
+                sx={{ mt: 2 }}
+              >
+                Retry
+              </Button>
             </Box>
           )}
 

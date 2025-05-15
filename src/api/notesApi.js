@@ -1,5 +1,29 @@
 // API service for communicating with the backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+// Detect mobile device
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+  typeof navigator !== 'undefined' ? navigator.userAgent : ''
+);
+
+// Determine the base URL
+const determineBaseUrl = () => {
+  // If an environment variable is set, use that
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Different URLs for mobile vs desktop
+  // Note: Mobile devices might need the actual IP or accessible hostname
+  // instead of localhost which only works on the device itself
+  return isMobile 
+    ? 'http://192.168.68.110:5001/api'  // Local network IP for real mobile devices
+    : 'http://localhost:5001/api'; // This works for desktop browsers
+};
+
+const API_BASE_URL = determineBaseUrl();
+
+// Log which API endpoint we're using - helps with debugging
+console.log(`Using API endpoint: ${API_BASE_URL}, Mobile: ${isMobile}`);
 
 // Helper function for handling fetch responses
 const handleResponse = async (response) => {
@@ -13,7 +37,13 @@ const handleResponse = async (response) => {
 };
 
 // Custom fetch with timeout and retry
-const fetchWithTimeout = async (url, options = {}, timeout = 10000, retries = 2) => {
+const fetchWithTimeout = async (url, options = {}, timeout = 15000, retries = 3) => {
+  // On mobile, we might need a longer timeout and more retries
+  if (isMobile) {
+    timeout = 20000; // 20 seconds for mobile
+    retries = 5;     // More retries for mobile
+  }
+  
   const controller = new AbortController();
   const { signal } = controller;
   
@@ -34,12 +64,18 @@ const fetchWithTimeout = async (url, options = {}, timeout = 10000, retries = 2)
     clearTimeout(timeoutId);
     
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout - server took too long to respond');
+      console.error(`Request to ${url} timed out after ${timeout}ms`);
+      throw new Error(`Request timeout - server took too long to respond (${timeout}ms)`);
     }
     
     // If there are retries left and it's a network error (likely mobile connectivity issue)
-    if (retries > 0 && (error.message.includes('fetch') || error.message.includes('network'))) {
-      console.log(`Retrying request to ${url}, ${retries} retries left`);
+    if (retries > 0) {
+      console.log(`Retrying request to ${url}, ${retries} retries left. Error: ${error.message}`);
+      
+      // Wait a bit before retrying (exponential backoff)
+      const delay = 1000 * Math.pow(2, 4 - retries); // 1s, 2s, 4s, 8s...
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
       return fetchWithTimeout(url, options, timeout, retries - 1);
     }
     

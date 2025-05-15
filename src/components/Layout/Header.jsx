@@ -156,8 +156,8 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            width: '100%',
-            justifyContent: 'space-between'
+            width: { xs: '100%', sm: 'auto' },
+            justifyContent: { xs: 'space-between', sm: 'flex-start' }
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {isMobile && (
@@ -189,18 +189,22 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
                 SimpleNotes
               </Typography>
             </Box>
-            {/* Dark mode toggle - always in first row */}
-            <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: { xs: 0, sm: 2 } }}>
-              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
+            {/* Dark mode toggle - only show in first row on mobile, or on right side on desktop */}
+            {isMobile && (
+              <IconButton color="inherit" onClick={onToggleDarkMode}>
+                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+              </IconButton>
+            )}
           </Box>
           
           {/* Search bar - always in second row on mobile, inline on desktop */}
           <Box sx={{ 
-            width: '100%', 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: { xs: '100%', sm: 'auto' }, 
             mt: { xs: 0.5, sm: 0 }, 
             flexGrow: { xs: 1, sm: 0 },
-            display: { xs: 'block', sm: 'inline-flex' }
           }}>
             <Search sx={{ 
               width: '100%',
@@ -216,6 +220,13 @@ function Header({ onSearch, onChangeTab, activeTab, darkMode, onToggleDarkMode }
                 sx={{ color: "#ffffff" }} // Always keep text white
               />
             </Search>
+            
+            {/* Dark mode toggle on desktop only - next to search */}
+            {!isMobile && (
+              <IconButton color="inherit" onClick={onToggleDarkMode} sx={{ ml: 2 }}>
+                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+              </IconButton>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
