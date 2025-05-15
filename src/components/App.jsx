@@ -94,6 +94,54 @@ function App() {
     }
   }, [darkMode]);
 
+  // Update note colors when theme changes
+  useEffect(() => {
+    const defaultLightColor = limeGreenTheme.light.noteBackground; // "#ffffff"
+    const defaultDarkColor = limeGreenTheme.dark.noteBackground;   // "#2d2d2d"
+    
+    const updateNoteColors = async (noteList, setNoteList) => {
+      // Only update notes that have the default theme colors
+      const notesNeedingUpdate = noteList.filter(note => 
+        (note.color === defaultLightColor && darkMode) ||
+        (note.color === defaultDarkColor && !darkMode)
+      );
+      
+      if (notesNeedingUpdate.length === 0) return;
+      
+      // Create updated copies of notes with the new theme-appropriate default color
+      const updatedNotes = [...noteList];
+      let hasChanges = false;
+      
+      for (let i = 0; i < updatedNotes.length; i++) {
+        const note = updatedNotes[i];
+        // Only update notes with the default color that doesn't match the current theme
+        if ((note.color === defaultLightColor && darkMode) || (note.color === defaultDarkColor && !darkMode)) {
+          const targetColor = darkMode ? defaultDarkColor : defaultLightColor;
+          updatedNotes[i] = {
+            ...note,
+            color: targetColor
+          };
+          // Update the note on the server
+          try {
+            await notesApi.updateNote(note.id, updatedNotes[i]);
+            hasChanges = true;
+          } catch (err) {
+            console.error('Error updating note color:', err);
+          }
+        }
+      }
+      // Update state only if changes were made
+      if (hasChanges) {
+        setNoteList(updatedNotes);
+      }
+    };
+    
+    // Update both regular and archived notes
+    updateNoteColors(notes, setNotes);
+    updateNoteColors(archivedNotes, setArchivedNotes);
+    
+  }, [darkMode, notes, archivedNotes]);
+
   // Load notes from API on initial render
   useEffect(() => {
     const fetchAllNotes = async () => {
@@ -104,8 +152,35 @@ function App() {
           notesApi.fetchArchivedNotes()
         ]);
         
-        setNotes(fetchedNotes);
-        setArchivedNotes(fetchedArchivedNotes);
+        // Update notes with default colors based on the current theme
+        const defaultLightColor = limeGreenTheme.light.noteBackground; // "#ffffff"
+        const defaultDarkColor = limeGreenTheme.dark.noteBackground;   // "#2d2d2d"
+        
+        // Apply theme-appropriate colors to notes with default colors
+        const processedNotes = fetchedNotes.map(note => {
+          // Check if note has either default color and doesn't match current theme
+          const hasDefaultColor = note.color === defaultLightColor || note.color === defaultDarkColor;
+          const targetColor = darkMode ? defaultDarkColor : defaultLightColor;
+          
+          if (hasDefaultColor && note.color !== targetColor) {
+            return { ...note, color: targetColor };
+          }
+          return note;
+        });
+        
+        const processedArchivedNotes = fetchedArchivedNotes.map(note => {
+          // Check if note has either default color and doesn't match current theme
+          const hasDefaultColor = note.color === defaultLightColor || note.color === defaultDarkColor;
+          const targetColor = darkMode ? defaultDarkColor : defaultLightColor;
+          
+          if (hasDefaultColor && note.color !== targetColor) {
+            return { ...note, color: targetColor };
+          }
+          return note;
+        });
+        
+        setNotes(processedNotes);
+        setArchivedNotes(processedArchivedNotes);
         setError(null);
       } catch (err) {
         console.error('Error fetching notes:', err);
@@ -117,7 +192,7 @@ function App() {
     };
     
     fetchAllNotes();
-  }, []);
+  }, [darkMode]); // Add darkMode dependency to re-fetch when theme changes
 
   const showNotification = (message, severity = 'info') => {
     setNotification({ open: true, message, severity });

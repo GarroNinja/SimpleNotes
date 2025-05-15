@@ -81,11 +81,14 @@ function CreateArea(props) {
   
   // Update note color when theme changes
   useEffect(() => {
-    // When theme changes, update the note color if it's the default
-    if (note.color === "#2d2d2d" || note.color === "#ffffff") {
+    // When theme changes, update the note color if it's one of the default colors
+    const isDefaultColor = note.color === "#2d2d2d" || note.color === "#ffffff";
+    const newDefaultColor = theme.palette.mode === 'dark' ? "#2d2d2d" : "#ffffff";
+    
+    if (isDefaultColor && note.color !== newDefaultColor) {
       setNote(prevNote => ({
         ...prevNote,
-        color: theme.palette.mode === 'dark' ? "#2d2d2d" : "#ffffff"
+        color: newDefaultColor
       }));
     }
   }, [theme.palette.mode, note.color]);

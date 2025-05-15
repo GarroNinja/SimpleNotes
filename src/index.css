@@ -116,15 +116,15 @@ input:-webkit-autofill:active {
 }
 
 /* Fix for white box issue in notes */
-.dark-theme .MuiPaper-root {
+/* .dark-theme .MuiPaper-root {
   background-color: inherit !important;
-}
+} */
 
 /* Fix form background in dark mode */
-body.dark-mode form {
+/* body.dark-mode form {
   background-color: #1e1e1e !important;
   background: #1e1e1e !important;
-}
+} */
 
 form .MuiInputBase-root {
   background-color: inherit !important;
