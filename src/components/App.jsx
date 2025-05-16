@@ -147,10 +147,18 @@ function App() {
     const fetchAllNotes = async () => {
       setLoading(true);
       try {
+        console.log('Fetching notes from API...');
+        // Add debugging fetch call
+        const testFetch = await fetch(`${process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5002'}/api/health`);
+        const testResponse = await testFetch.json();
+        console.log('Health check response:', testResponse);
+        
         const [fetchedNotes, fetchedArchivedNotes] = await Promise.all([
           notesApi.fetchNotes(),
           notesApi.fetchArchivedNotes()
         ]);
+        
+        console.log('Notes received:', fetchedNotes);
         
         // Update notes with default colors based on the current theme
         const defaultLightColor = limeGreenTheme.light.noteBackground; // "#ffffff"
@@ -191,10 +199,10 @@ function App() {
         } else if (err.message && err.message.includes('fetch')) {
           setError('Network error. Please make sure you have a working internet connection and try again.');
         } else {
-          setError('Failed to load notes. Please try again later.');
+          setError(`Failed to load notes: ${err.message}`);
         }
         
-        showNotification('Failed to load notes from server', 'error');
+        showNotification('Failed to load notes from server: ' + err.message, 'error');
       } finally {
         setLoading(false);
       }

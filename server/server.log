@@ -1,0 +1,19 @@
+Attempting to connect to database: postgresql://***:***@aws-0-ap-south-1.pooler.supabase.com:6543/postgres
+Using Supabase connection pooler: yes
+Testing database connection...
+Testing database connection...
+✅ Database connection successful: 2025-05-16T03:32:46.560Z
+Server running on port 5002
+Health check available at http://localhost:5002/health
+API available at http://localhost:5002/api
+✅ Database connection successful: 2025-05-16T03:32:46.581Z
+2025-05-16T03:32:53.238Z - GET /api/notes
+Fetching all non-archived notes
+Retrieved 0 notes
+2025-05-16T03:33:08.510Z - POST /api/notes
+Creating new note: { title: 'Test Note', color: '#ffffff', isPinned: false }
+Note created with ID: 23
+Performing periodic database connection check...
+Performing periodic database connection check...
+Performing periodic database connection check...
+Performing periodic database connection check...
